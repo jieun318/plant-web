@@ -12,8 +12,11 @@ export const IDENTIFY_PROMPT = `너는 식물 판별 전문가다.
   "scientificName": "학명",
   "confident": true,
   "difficulty": "쉬움",
+  "origin": "원산지를 짧은 명사구로",
   "light": "빛 조건을 한 문장으로",
   "water": "물주기 방법을 한 문장으로",
+  "humidity": "습도 조건을 한 문장으로",
+  "repot": "분갈이 시기를 한 문장으로",
   "waterIntervalDays": 7,
   "note": "이 식물의 특징을 한 문장으로"
 }
@@ -21,6 +24,7 @@ export const IDENTIFY_PROMPT = `너는 식물 판별 전문가다.
 규칙:
 - difficulty 는 "쉬움" | "보통" | "어려움" 중 하나만
 - waterIntervalDays 는 일반적인 실내 환경 기준 숫자
+- light, water, humidity, repot 는 한 줄에 들어갈 길이로 짧게
 - 확신이 없거나 식물이 아니면 confident 를 false 로 하고
   koreanName 에 "판별 불가"라고 써라
 - 확률이나 퍼센트는 쓰지 마라`;

@@ -1,107 +1,82 @@
 "use client";
 
-import { useState } from "react";
-import type { IdentifyResult } from "@/types";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import PhotoUpload from "@/components/PhotoUpload";
+import { getAccessToken } from "@/lib/auth";
+import { byUrgency, needsWaterToday } from "@/lib/water";
+import type { Plant } from "@/types";
 
 export default function Home() {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [result, setResult] = useState<IdentifyResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [due, setDue] = useState<Plant[]>([]);
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    let alive = true;
 
-    setPreview(URL.createObjectURL(file));
-    setResult(null);
-    setError(null);
-    setLoading(true);
+    (async () => {
+      try {
+        const token = await getAccessToken();
+        const res = await fetch("/api/plants", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
 
-    try {
-      const form = new FormData();
-      form.append("photo", file);
-
-      const res = await fetch("/api/identify", {
-        method: "POST",
-        body: form,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "판별에 실패했습니다.");
-      } else {
-        setResult(data);
+        const plants = (await res.json()) as Plant[];
+        if (alive) setDue(plants.filter(needsWaterToday).sort(byUrgency));
+      } catch {
+        // 오늘 할 일은 보조 정보다. 못 불러오면 영역을 접는다.
       }
-    } catch {
-      setError("요청에 실패했습니다. 터미널 로그를 확인하세요.");
-    } finally {
-      setLoading(false);
-    }
-  }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md px-5 py-10">
-      <h1 className="text-xl font-semibold">판별 테스트</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        식물 사진을 넣고 이름이 맞게 나오는지 확인합니다.
-      </p>
+    <main className="py-10">
+      <p className="text-xs text-neutral-400">안녕하세요</p>
+      <h1 className="mt-1 text-2xl leading-snug font-semibold tracking-tight">
+        어떤 식물이
+        <br />
+        궁금하세요?
+      </h1>
 
-      <label className="mt-6 block cursor-pointer rounded-lg border border-dashed border-neutral-300 px-4 py-8 text-center text-sm text-neutral-600 hover:border-neutral-500">
-        사진 고르기
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFile}
-          className="hidden"
-        />
-      </label>
+      <div className="mt-10">
+        <PhotoUpload />
+      </div>
 
-      {preview && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={preview}
-          alt="선택한 사진"
-          className="mt-5 w-full rounded-lg border border-neutral-200"
-        />
-      )}
-
-      {loading && <p className="mt-5 text-sm text-neutral-500">판별 중...</p>}
-
-      {error && (
-        <p className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-
-      {result && (
-        <div className="mt-5 rounded-lg border border-neutral-200 p-4">
-          <p className="text-xs text-neutral-500">
-            {result.confident ? "이 사진과 가장 비슷해요" : "판별하지 못했어요"}
-          </p>
-          <p className="mt-1 text-lg font-semibold">{result.koreanName}</p>
-          <p className="text-sm text-neutral-500">{result.scientificName}</p>
-
-          <dl className="mt-4 space-y-2 text-sm">
-            <Row label="난이도" value={result.difficulty} />
-            <Row label="빛" value={result.light} />
-            <Row label="물" value={result.water} />
-            <Row label="물주기 간격" value={`${result.waterIntervalDays}일`} />
-          </dl>
-
-          <p className="mt-4 text-sm text-neutral-600">{result.note}</p>
-        </div>
-      )}
+      {due.length > 0 && <TodoCard plants={due} />}
     </main>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function TodoCard({ plants }: { plants: Plant[] }) {
+  const names = plants.map((p) => p.nickname || p.species).join(", ");
+  const thumbnail = plants.find((p) => p.photo_url)?.photo_url;
+
   return (
-    <div className="flex justify-between gap-4 border-b border-neutral-100 pb-2">
-      <dt className="shrink-0 text-neutral-400">{label}</dt>
-      <dd className="text-right">{value}</dd>
-    </div>
+    <Link
+      href="/plants"
+      className="mt-10 flex items-center gap-3 rounded-xl border border-neutral-200 p-4"
+    >
+      {thumbnail ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbnail}
+          alt=""
+          className="size-13 shrink-0 rounded-lg object-cover"
+        />
+      ) : (
+        <div className="size-13 shrink-0 rounded-lg bg-neutral-100" />
+      )}
+
+      <div className="min-w-0">
+        <p className="text-base font-semibold">
+          오늘 물 줄 식물 {plants.length}
+        </p>
+        <p className="truncate text-xs text-neutral-500">{names}</p>
+      </div>
+    </Link>
   );
 }

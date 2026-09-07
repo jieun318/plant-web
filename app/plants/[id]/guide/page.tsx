@@ -3,7 +3,7 @@
 export default function Placeholder() {
   return (
     <main className="py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">증상 진단</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">관리 가이드</h1>
       <p className="mt-2 text-sm leading-relaxed text-neutral-500">
         준비 중인 화면입니다.
       </p>
