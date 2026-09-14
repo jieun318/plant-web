@@ -1,12 +1,14 @@
-// TODO: 아직 만들지 않은 화면. 구현 순서에 따라 곧 교체한다.
-// 지금은 비어 있으면 빌드가 깨지고 이동 시 크래시가 나므로 자리만 잡아둔다.
-export default function Placeholder() {
+import PageShell from "@/components/layout/PageShell";
+import SectionTitle from "@/components/ui/SectionTitle";
+
+// TODO: S-07 관리 가이드. 탭 4개와 생성·캐싱은 아직 만들지 않았다.
+export default function GuidePage() {
   return (
-    <main className="py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">관리 가이드</h1>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-500">
+    <PageShell className="max-w-3xl">
+      <SectionTitle as="h1">관리 가이드</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-ink-70">
         준비 중인 화면입니다.
       </p>
-    </main>
+    </PageShell>
   );
 }
