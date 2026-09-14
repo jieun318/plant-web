@@ -1,9 +1,46 @@
 @import "tailwindcss";
 
+/* ── 디자인 토큰 ─────────────────────────────────────────────────────
+   종이 / 우드 톤. 컴포넌트에서 hex 를 직접 쓰지 않는다.
+   여기 정의한 이름이 곧 Tailwind 유틸리티가 된다 (bg-sheet, text-ink-70 …).
+   Tailwind v4 라 tailwind.config 파일 없이 @theme 으로 연결한다.        */
+
+:root {
+  --oat: #e3dac6; /* 페이지 바탕 (연베이지) */
+  --sheet: #fbf8f1; /* 콘텐츠 종이색 */
+  --sheet-2: #f4efe3; /* 종이 음영 */
+  --wood: #6b5741; /* 프레임, 강한 구분선 */
+  --rule: #d5ccb8; /* 일반 테두리 */
+  --ink: #2b2a25; /* 본문 */
+  --ink-70: #5c584e; /* 보조 */
+  --ink-45: #918b7d; /* 흐린 글자 */
+  --leaf: #2f5d3a; /* 액션, 정상 상태 */
+  --leaf-50: #e4ebe0; /* 초록 배경 */
+  --clay: #8a5a38; /* 경고 (빨강 대신 흙빛) */
+  --clay-50: #f0e4d8;
+}
+
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --color-oat: var(--oat);
+  --color-sheet: var(--sheet);
+  --color-sheet-2: var(--sheet-2);
+  --color-wood: var(--wood);
+  --color-rule: var(--rule);
+  --color-ink: var(--ink);
+  --color-ink-70: var(--ink-70);
+  --color-ink-45: var(--ink-45);
+  --color-leaf: var(--leaf);
+  --color-leaf-50: var(--leaf-50);
+  --color-clay: var(--clay);
+  --color-clay-50: var(--clay-50);
+
+  /* 제목은 명조, 본문과 UI 는 산세리프 */
+  --font-serif: var(--font-gowun-batang), serif;
+  --font-sans: var(--font-plex-sans-kr), sans-serif;
 }
 
 body {
-  font-family: var(--font-sans), sans-serif;
+  background: var(--oat);
+  color: var(--ink);
+  font-family: var(--font-sans);
 }
