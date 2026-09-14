@@ -1,4 +1,3 @@
-import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
 // 로그인 화면 없이 사용자를 식별한다.
@@ -10,36 +9,53 @@ import { supabase } from "./supabase";
 //
 // 브라우저에서만 부를 것.
 
-let pending: Promise<Session> | null = null;
+let ensuring: Promise<void> | null = null;
 
-async function createSession(): Promise<Session> {
+async function createIfNeeded(): Promise<void> {
   const { data } = await supabase.auth.getSession();
-  if (data.session) return data.session;
+  if (data.session) return;
 
-  const { data: signed, error } = await supabase.auth.signInAnonymously();
-
-  if (error || !signed.session) {
+  const { error } = await supabase.auth.signInAnonymously();
+  if (error) {
     throw new Error(
       "익명 로그인에 실패했습니다. Supabase 대시보드 > Authentication > Sign In / Providers 에서 Anonymous sign-ins 가 켜져 있는지 확인하세요."
     );
   }
-
-  return signed.session;
 }
 
-/** 세션을 가져오거나 없으면 만든다. 동시에 여러 번 불러도 계정이 하나만 생기게 묶어둔다. */
-export function getSession(): Promise<Session> {
-  if (!pending) {
-    pending = createSession().catch((e) => {
+/** 세션이 없으면 만든다. 동시에 여러 번 불러도 계정이 하나만 생기게 묶어둔다. */
+export function ensureSession(): Promise<void> {
+  if (!ensuring) {
+    ensuring = createIfNeeded().catch((e) => {
       // 실패한 약속을 남겨두면 이후 호출이 영원히 같은 에러를 받는다
-      pending = null;
+      ensuring = null;
       throw e;
     });
   }
-  return pending;
+  return ensuring;
 }
 
-/** API 라우트에 보낼 토큰. 서버가 이걸 검증해 사용자를 식별한다. */
+/**
+ * API 라우트에 보낼 토큰.
+ *
+ * 세션 객체를 캐시하면 안 된다. 액세스 토큰은 한 시간이면 만료되므로
+ * 탭을 오래 열어두면 죽은 토큰을 계속 보내게 된다.
+ * getSession() 은 만료가 가까우면 알아서 갱신해준다.
+ */
 export async function getAccessToken(): Promise<string> {
-  return (await getSession()).access_token;
+  await ensureSession();
+
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data.session) {
+    throw new Error("세션을 확인하지 못했습니다. 새로고침해 주세요.");
+  }
+
+  return data.session.access_token;
+}
+
+/** 서버가 토큰을 거부했을 때 세션을 버리고 새로 만든다. */
+export async function resetSession(): Promise<void> {
+  ensuring = null;
+  await supabase.auth.signOut({ scope: "local" });
+  await ensureSession();
 }
