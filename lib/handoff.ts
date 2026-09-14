@@ -1,4 +1,4 @@
-import type { IdentifyResult } from "@/types";
+import type { DiagnosisAnswer, DiagnosisResult, IdentifyResult } from "@/types";
 
 // 홈에서 판별한 결과를 /result 로 넘긴다.
 // 상태 라이브러리를 쓰지 않기로 했고 URL 에 담기에는 큰 값이라 sessionStorage 를 쓴다.
@@ -58,4 +58,51 @@ export function getIdentifyServerSnapshot(): IdentifyHandoff | null | undefined 
 /** 같은 탭에서는 우리가 직접 쓰고 바로 이동하므로 구독할 것이 없다. */
 export function subscribeIdentify(): () => void {
   return () => {};
+}
+
+// ── 진단 결과 전달 (S-03 → S-04) ────────────────────────────────────
+// 판별 결과와 같은 이유로 sessionStorage 를 쓴다.
+
+const DIAGNOSIS_KEY = "plantweb:diagnosis";
+
+export type DiagnosisHandoff = {
+  plantId: string;
+  result: DiagnosisResult;
+  answers: DiagnosisAnswer[];
+  photoUrl: string | null;
+};
+
+export function saveDiagnosis(handoff: DiagnosisHandoff) {
+  try {
+    sessionStorage.setItem(DIAGNOSIS_KEY, JSON.stringify(handoff));
+  } catch {
+    // 저장이 막혀도 진단 자체는 끝났으므로 이동은 막지 않는다
+  }
+}
+
+let diagnosisRaw: string | null = null;
+let diagnosisCached: DiagnosisHandoff | null = null;
+
+export function getDiagnosisSnapshot(): DiagnosisHandoff | null {
+  let raw: string | null = null;
+  try {
+    raw = sessionStorage.getItem(DIAGNOSIS_KEY);
+  } catch {
+    return null;
+  }
+
+  if (raw !== diagnosisRaw) {
+    diagnosisRaw = raw;
+    try {
+      diagnosisCached = raw ? (JSON.parse(raw) as DiagnosisHandoff) : null;
+    } catch {
+      diagnosisCached = null;
+    }
+  }
+
+  return diagnosisCached;
+}
+
+export function getDiagnosisServerSnapshot(): DiagnosisHandoff | null | undefined {
+  return undefined;
 }
