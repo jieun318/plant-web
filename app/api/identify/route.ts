@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { identifyPlant } from "@/lib/gemini";
 import { toIdentificationRow } from "@/lib/identification";
+import { imageMimeType, withImageType } from "@/lib/image";
 import { getUserId, supabaseServer, uploadPhoto } from "@/lib/supabase-server";
 import type { IdentifyResult } from "@/types";
 
@@ -69,16 +70,20 @@ async function trim(userId: string) {
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
-    const file = form.get("photo");
+    const raw = form.get("photo");
 
-    if (!(file instanceof File)) {
+    if (!(raw instanceof File)) {
       return NextResponse.json(
         { error: "사진이 없습니다." },
         { status: 400 }
       );
     }
 
-    if (!file.type.startsWith("image/")) {
+    // type 이 빈 HEIC 는 확장자로 판단해 채운다. Gemini 와 Storage 가 이 값을 쓴다.
+    const mime = imageMimeType(raw);
+    const file = mime ? withImageType(raw, mime) : raw;
+
+    if (!mime) {
       return NextResponse.json(
         { error: "이미지 파일만 올릴 수 있습니다." },
         { status: 400 }

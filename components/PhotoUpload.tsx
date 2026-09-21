@@ -7,7 +7,7 @@ import { buttonClass } from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { apiFetch } from "@/lib/api";
 import { saveIdentify } from "@/lib/handoff";
-import { fileToDataUrl, resizeImage } from "@/lib/image";
+import { fileToDataUrl, imageMimeType, resizeImage, withImageType } from "@/lib/image";
 import type { IdentifyResult } from "@/types";
 
 type Props = {
@@ -40,7 +40,8 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
   async function handle(file: File | undefined) {
     if (!file || loading) return;
 
-    if (!file.type.startsWith("image/")) {
+    const mime = imageMimeType(file);
+    if (!mime) {
       setError("이미지 파일만 올릴 수 있습니다.");
       return;
     }
@@ -49,7 +50,8 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
     setLoading(true);
 
     try {
-      const resized = await resizeImage(file);
+      // 브라우저가 못 읽는 형식(HEIC 등)은 줄이지 못하고 원본이 돌아온다. 그때 type 을 채워 보낸다.
+      const resized = withImageType(await resizeImage(file), mime);
       const photo = await fileToDataUrl(resized);
 
       const form = new FormData();
@@ -94,7 +96,7 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
       {loading ? "판별 중..." : "사진 고르기"}
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         disabled={loading}
         onChange={pick}
         className="sr-only"
@@ -110,7 +112,7 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
       카메라로 찍기
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         capture="environment"
         disabled={loading}
         onChange={pick}
@@ -150,7 +152,7 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
         <p className="mt-4 text-sm font-medium text-ink">
           {loading ? "사진을 살펴보는 중입니다" : "사진을 여기에 끌어다 놓으세요"}
         </p>
-        <p className="mt-1 text-xs text-ink-45">JPG, PNG · 한 장이면 충분합니다</p>
+        <p className="mt-1 text-xs text-ink-45">JPG, PNG, HEIC · 한 장이면 충분합니다</p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
           {picker}
