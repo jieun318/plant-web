@@ -7,8 +7,11 @@ const DAY = 24 * 60 * 60 * 1000;
 /** 예정일까지 이만큼 이상 남았는데 물을 주려 하면 한 번 되묻는다. */
 export const EARLY_WARN_DAYS = 3;
 
-/** 이른 물주기가 이만큼 쌓이면 상세 상단에 과습 안내를 띄운다. */
+/** 최근 EARLY_WINDOW_DAYS 안에 이른 물주기가 이만큼 쌓이면 상세 상단에 과습 안내를 띄운다. */
 export const EARLY_WARN_COUNT = 3;
+
+/** 이른 물주기를 세는 기간. 오래전 기록 때문에 안내가 영영 안 사라지는 것을 막는다. */
+export const EARLY_WINDOW_DAYS = 30;
 
 /**
  * 이른 물주기 기록에 남기는 문구.
@@ -26,9 +29,12 @@ export function isEarlyWater(log: CareLog): boolean {
   return log.type === "water" && Boolean(log.memo?.startsWith(EARLY_PREFIX));
 }
 
-/** 이른 물주기가 몇 번 쌓였는지. */
-export function countEarlyWaterings(logs: CareLog[]): number {
-  return logs.filter(isEarlyWater).length;
+/** 최근 EARLY_WINDOW_DAYS 안에 이른 물주기가 몇 번 있었는지. */
+export function countEarlyWaterings(logs: CareLog[], now = new Date()): number {
+  const since = now.getTime() - EARLY_WINDOW_DAYS * DAY;
+  return logs.filter(
+    (log) => isEarlyWater(log) && new Date(log.created_at).getTime() >= since
+  ).length;
 }
 
 /** 같은 날인지. 시각은 보지 않는다. */
