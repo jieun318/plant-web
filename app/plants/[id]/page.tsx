@@ -13,7 +13,14 @@ import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Timeline, { type TimelineItem } from "@/components/ui/Timeline";
 import { apiFetch } from "@/lib/api";
-import { daysSinceRegistered, daysUntilWater, waterPhrase } from "@/lib/water";
+import {
+  EARLY_WARN_COUNT,
+  countEarlyWaterings,
+  daysSinceRegistered,
+  daysUntilWater,
+  todaysWaterLog,
+  waterPhrase,
+} from "@/lib/water";
 import type { CareLog, Plant } from "@/types";
 
 const LOG_TEXT: Record<CareLog["type"], string> = {
@@ -33,6 +40,8 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
   const [error, setError] = useState<string | null>(null);
   const [watering, setWatering] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  // 예정일보다 이른 물주기라 되묻는 중. 숫자는 예정일까지 남은 일수.
+  const [confirmDays, setConfirmDays] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -61,14 +70,19 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
     };
   }, [id]);
 
-  async function water() {
+  /** force 는 "그래도 주겠다"는 확인을 거쳤다는 뜻이다. */
+  async function water(force = false) {
     if (watering) return;
 
     setWatering(true);
     setError(null);
 
     try {
-      const res = await apiFetch(`/api/plants/${id}/water`, { method: "POST" });
+      const res = await apiFetch(`/api/plants/${id}/water`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force }),
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -76,6 +90,13 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
         return;
       }
 
+      // 아직 줄 때가 아니다. 아무것도 기록되지 않았고, 한 번 더 묻는다.
+      if (data.needsConfirm) {
+        setConfirmDays(data.daysLeft as number);
+        return;
+      }
+
+      setConfirmDays(null);
       setPlant(data.plant);
       if (data.log) setLogs((prev) => [data.log, ...prev]);
     } catch {
@@ -85,14 +106,43 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
     }
   }
 
+  /** 실수로 눌렀을 때. 오늘 기록만 지우고 물주기 날짜를 되돌린다. */
+  async function cancelWater() {
+    if (watering) return;
+
+    setWatering(true);
+    setError(null);
+
+    try {
+      const res = await apiFetch(`/api/plants/${id}/water`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "취소하지 못했습니다.");
+        return;
+      }
+
+      setPlant(data.plant);
+      setLogs((prev) => prev.filter((log) => log.id !== data.removedLogId));
+    } catch {
+      setError("취소에 실패했습니다. 연결을 확인해 주세요.");
+    } finally {
+      setWatering(false);
+    }
+  }
+
   const visible = expanded ? logs : logs.slice(0, VISIBLE_LOGS);
   const hidden = logs.length - visible.length;
 
+  // 같은 날 여러 건이 쌓이므로 시각까지 적는다
   const items: TimelineItem[] = visible.map((log) => ({
     id: log.id,
-    date: formatDate(log.created_at),
+    date: formatDateTime(log.created_at),
     text: log.memo || LOG_TEXT[log.type],
   }));
+
+  const wateredToday = Boolean(todaysWaterLog(logs));
+  const tooOften = countEarlyWaterings(logs) >= EARLY_WARN_COUNT;
 
   return (
     <PageShell>
@@ -106,6 +156,23 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
 
       {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
       {!plant && !error && <Loading className="mt-10" />}
+
+      {/* 이른 물주기가 쌓였다. 과습은 이 서비스가 막으려는 문제다. */}
+      {plant && tooOften && (
+        <Panel className="mt-6">
+          <p className="text-sm leading-relaxed text-clay">
+            최근 물을 자주 주고 있어요. 과습이 의심되면 진단해 보세요.
+          </p>
+          <Button
+            href={`/diagnose?plantId=${plant.id}`}
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+          >
+            진단해 보기
+          </Button>
+        </Panel>
+      )}
 
       {plant && (
         <div className="mt-6 grid items-start gap-8 md:grid-cols-2 md:gap-12">
@@ -139,9 +206,46 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
           <div className="flex flex-col gap-6">
             <Panel title="관리">
               <div className="flex flex-col gap-2">
-                <Button onClick={water} disabled={watering} full>
-                  {watering ? "기록 중..." : "물 줬어요"}
-                </Button>
+                {wateredToday ? (
+                  <>
+                    <Button disabled full>
+                      오늘 물 줬어요 ✓
+                    </Button>
+                    <p className="text-center text-xs text-ink-45">
+                      다음 물주기는 {waterPhrase(daysUntilWater(plant))}예요
+                    </p>
+                    <Button
+                      variant="quiet"
+                      size="sm"
+                      onClick={cancelWater}
+                      disabled={watering}
+                    >
+                      기록 취소
+                    </Button>
+                  </>
+                ) : confirmDays !== null ? (
+                  <>
+                    <p className="text-sm leading-relaxed text-clay">
+                      아직 물 줄 때가 아니에요. 지금 주면 과습으로 뿌리가 상할 수
+                      있습니다. 흙이 정말 말랐나요?
+                    </p>
+                    <Button onClick={() => water(true)} disabled={watering} full>
+                      {watering ? "기록 중..." : "흙이 말랐어요, 기록할게요"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setConfirmDays(null)}
+                      disabled={watering}
+                      full
+                    >
+                      취소
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => water()} disabled={watering} full>
+                    {watering ? "기록 중..." : "물 줬어요"}
+                  </Button>
+                )}
                 <Button href={`/diagnose?plantId=${plant.id}`} variant="ghost" full>
                   잎이 이상해요 · 진단하기
                 </Button>
@@ -211,9 +315,13 @@ function SpeciesPanel({ plant }: { plant: Plant }) {
   );
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("ko-KR", {
+/** 9월 16일 14:20 — 같은 날 여러 건을 구분해야 해서 시각까지 적는다. */
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("ko-KR", {
     month: "long",
     day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }

@@ -1,8 +1,48 @@
-import type { Plant } from "@/types";
+import type { CareLog, Plant } from "@/types";
 
 // 식물 카드와 상세에 쓰는 날짜 계산을 모아둔다.
 
 const DAY = 24 * 60 * 60 * 1000;
+
+/** 예정일까지 이만큼 이상 남았는데 물을 주려 하면 한 번 되묻는다. */
+export const EARLY_WARN_DAYS = 3;
+
+/** 이른 물주기가 이만큼 쌓이면 상세 상단에 과습 안내를 띄운다. */
+export const EARLY_WARN_COUNT = 3;
+
+/**
+ * 이른 물주기 기록에 남기는 문구.
+ *
+ * 세는 것도 이 문구로 한다. care_logs 에 따로 칸을 만들지 않았다.
+ * 문구를 바꾸면 지난 기록이 집계에서 빠지므로 여기 한 곳에서만 만든다.
+ */
+const EARLY_PREFIX = "예정보다";
+
+export function earlyWaterMemo(daysEarly: number): string {
+  return `${EARLY_PREFIX} ${daysEarly}일 이른 물주기`;
+}
+
+export function isEarlyWater(log: CareLog): boolean {
+  return log.type === "water" && Boolean(log.memo?.startsWith(EARLY_PREFIX));
+}
+
+/** 이른 물주기가 몇 번 쌓였는지. */
+export function countEarlyWaterings(logs: CareLog[]): number {
+  return logs.filter(isEarlyWater).length;
+}
+
+/** 같은 날인지. 시각은 보지 않는다. */
+export function isSameDay(a: string | Date, b: string | Date): boolean {
+  return atMidnight(a).getTime() === atMidnight(b).getTime();
+}
+
+/** 오늘 남긴 물주기 기록. 없으면 undefined. */
+export function todaysWaterLog(logs: CareLog[]): CareLog | undefined {
+  const today = new Date();
+  return logs.find(
+    (log) => log.type === "water" && isSameDay(log.created_at, today)
+  );
+}
 
 /** 시각을 버리고 날짜만 남긴다. "몇 밀리초 뒤"가 아니라 "며칠 뒤"를 세기 위함. */
 function atMidnight(value: string | Date): Date {
