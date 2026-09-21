@@ -3,16 +3,13 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
-import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import InfoRow from "@/components/ui/InfoRow";
 import Loading from "@/components/ui/Loading";
-import Panel from "@/components/ui/Panel";
 import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
+import SpecimenLabel from "@/components/ui/SpecimenLabel";
 import { apiFetch } from "@/lib/api";
 import {
   getIdentifyServerSnapshot,
@@ -122,7 +119,7 @@ export default function ResultView() {
     return (
       <PageShell>
         <SectionTitle as="h1">판별 결과가 없어요</SectionTitle>
-        <p className="mt-2 text-sm leading-relaxed text-ink-70">
+        <p className="mt-2 text-sm leading-relaxed text-soft">
           사진을 먼저 올려주세요.
         </p>
         <Button href="/" className="mt-6">
@@ -136,62 +133,54 @@ export default function ResultView() {
     <PageShell>
       <BackLink />
 
-      <div className="mt-6 grid items-start gap-10 md:grid-cols-2 md:gap-14">
+      <div className="mt-6 grid items-start gap-7 md:grid-cols-[1.3fr_0.7fr] md:gap-7">
         <PhotoFrame src={photo} alt="판별한 사진" ratio="photo" />
 
         <div>
           {result.confident ? (
             <>
-              <p className="text-xs text-ink-45">이 사진과 가장 비슷해요</p>
-              <SectionTitle as="h1" className="mt-1">
-                {result.koreanName}
-              </SectionTitle>
-              <p className="mt-1 text-sm text-ink-70 italic">
-                {result.scientificName}
-              </p>
-
-              <Badge tone="leaf" className="mt-4">
-                난이도 {result.difficulty}
-              </Badge>
-
-              <Panel className="mt-7">
-                <dl>
-                  <InfoRow label="원산지" value={result.origin} />
-                  <InfoRow label="빛" value={result.light} />
-                  <InfoRow label="물" value={result.water} />
-                  <InfoRow label="습도" value={result.humidity} />
-                  <InfoRow label="분갈이" value={result.repot} />
-                </dl>
-              </Panel>
+              <SpecimenLabel
+                heading="판별 결과"
+                no="가장 비슷한 종"
+                name={result.koreanName}
+                scientificName={result.scientificName}
+                fields={[
+                  { label: "난이도", value: result.difficulty },
+                  { label: "원산지", value: result.origin },
+                  { label: "빛", value: result.light },
+                  { label: "물", value: result.water },
+                  { label: "습도", value: result.humidity },
+                  { label: "분갈이", value: result.repot },
+                ].filter((field) => field.value)}
+              />
 
               {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
 
-              <div className="mt-7 flex flex-col gap-2 sm:flex-row">
-                <Button
-                  onClick={() => register((plantId) => `/plants/${plantId}`)}
-                  disabled={saving}
-                  className="sm:flex-1"
-                >
-                  {saving ? "등록 중..." : "내 식물로 등록"}
-                </Button>
+              <Button
+                onClick={() => register((plantId) => `/plants/${plantId}`)}
+                disabled={saving}
+                full
+                className="mt-6"
+              >
+                {saving ? "등록 중..." : "내 식물로 등록"}
+              </Button>
+              <div className="mt-4 flex flex-wrap items-baseline gap-x-5 gap-y-2">
                 <Button
                   variant="link"
                   onClick={() => register((plantId) => `/plants/${plantId}/guide`)}
                   disabled={saving}
-                  className="sm:flex-1"
                 >
                   등록하고 관리법 보기
                 </Button>
+                <span className="text-xs text-soft">
+                  다른 식물인가요? 사진을 다시 올리면 더 정확해집니다.
+                </span>
               </div>
-
-              <p className="mt-4 text-xs leading-relaxed text-ink-45">
-                다른 식물인가요? 사진을 다시 올리면 더 정확해집니다.
-              </p>
             </>
           ) : (
             <>
               <SectionTitle as="h1">판별하지 못했어요</SectionTitle>
-              <p className="mt-3 text-sm leading-relaxed text-ink-70">
+              <p className="mt-3 text-sm leading-relaxed text-soft">
                 잎과 줄기가 잘 보이게, 밝은 곳에서 다시 찍어주세요.
               </p>
               <Button href="/" className="mt-7">
@@ -207,12 +196,8 @@ export default function ResultView() {
 
 function BackLink() {
   return (
-    <Link
-      href="/"
-      className="-ml-1 inline-flex items-center gap-0.5 text-sm text-ink-70 transition-colors hover:text-ink"
-    >
-      <ChevronLeft aria-hidden className="size-4" />
-      다시 올리기
+    <Link href="/" className="text-sm text-soft transition-colors hover:text-ink">
+      ← 다시 올리기
     </Link>
   );
 }
