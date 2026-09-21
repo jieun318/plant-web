@@ -99,7 +99,7 @@ export async function GET(
   } catch (e) {
     console.error("[guide:GET]", e);
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "가이드를 만들지 못했습니다." },
+      { error: "가이드를 만들지 못했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }

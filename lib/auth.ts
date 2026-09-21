@@ -17,9 +17,12 @@ async function createIfNeeded(): Promise<void> {
 
   const { error } = await supabase.auth.signInAnonymously();
   if (error) {
-    throw new Error(
-      "익명 로그인에 실패했습니다. Supabase 대시보드 > Authentication > Sign In / Providers 에서 Anonymous sign-ins 가 켜져 있는지 확인하세요."
+    // 설정 안내는 개발자용이라 콘솔에만 남기고, 화면에는 짧게 알린다
+    console.error(
+      "[auth] 익명 로그인 실패. Supabase 대시보드 > Authentication > Sign In / Providers 에서 Anonymous sign-ins 가 켜져 있는지 확인하세요.",
+      error
     );
+    throw new Error("연결에 문제가 있습니다. 잠시 후 새로고침해 주세요.");
   }
 }
 

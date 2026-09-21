@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error("[diagnose]", e);
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "진단에 실패했습니다." },
+      { error: "진단하지 못했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }

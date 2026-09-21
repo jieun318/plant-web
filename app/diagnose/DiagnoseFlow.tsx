@@ -87,12 +87,19 @@ export default function DiagnoseFlow() {
   }, [plantId]);
 
   // 선택 즉시 다음으로 넘어간다. 확인 버튼을 두지 않는다.
-  async function choose(option: string) {
-    if (!plantId || !question || loading) return;
+  function choose(option: string) {
+    if (!question || loading) return;
 
     const next = [...answers, { question: question.question, answer: option }];
     setAnswers(next);
     setQuestion(null);
+    step(next);
+  }
+
+  /** 답변을 보내고 다음 질문이나 결론을 받는다. 실패하면 같은 답변으로 다시 부를 수 있다. */
+  async function step(next: DiagnosisAnswer[]) {
+    if (!plantId) return;
+
     setLoading(true);
     setError(null);
 
@@ -148,7 +155,17 @@ export default function DiagnoseFlow() {
       </p>
 
       {error && (
-        <ErrorMessage className="mt-8">{error}</ErrorMessage>
+        <>
+          <ErrorMessage className="mt-8">{error}</ErrorMessage>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+            onClick={() => step(answers)}
+          >
+            다시 시도
+          </Button>
+        </>
       )}
 
       {loading && !error && (

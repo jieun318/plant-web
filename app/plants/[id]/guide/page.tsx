@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
+import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
 import Panel from "@/components/ui/Panel";
@@ -121,7 +122,26 @@ export default function PlantGuidePage({
 
       {/* 만드는 데 몇 초 걸린다. 화면 전체를 가리지 않고 이 자리에만 표시한다 */}
       {loading && <Loading className="mt-10" />}
-      {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
+      {error && (
+        <>
+          <ErrorMessage className="mt-6">{error}</ErrorMessage>
+          {/* 실패를 지우면 위의 effect 가 이 탭을 다시 부른다 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+            onClick={() =>
+              setErrors((prev) => {
+                const next = { ...prev };
+                delete next[topic];
+                return next;
+              })
+            }
+          >
+            다시 시도
+          </Button>
+        </>
+      )}
 
       {guide && (
         <div className="mt-6 flex flex-col gap-5">

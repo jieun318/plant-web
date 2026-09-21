@@ -108,11 +108,11 @@ export async function POST(req: NextRequest) {
       photoUrl: saved?.photoUrl ?? null,
     });
   } catch (e) {
-    // 개발 중에는 터미널에서 원인을 봐야 하므로 그대로 찍는다
+    // 원인은 터미널에서 본다. 사용자에게는 내부 메시지를 보여주지 않는다.
     console.error("[identify]", e);
 
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "판별에 실패했습니다." },
+      { error: "사진을 판별하지 못했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }
