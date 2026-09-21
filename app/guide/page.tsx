@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import PageShell from "@/components/layout/PageShell";
 import PhotoUpload from "@/components/PhotoUpload";
+import PlantCard from "@/components/PlantCard";
 import Badge from "@/components/ui/Badge";
-import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
-import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { apiFetch } from "@/lib/api";
 import type { Plant } from "@/types";
@@ -70,24 +69,12 @@ export default function GuideIndexPage() {
       {plants && plants.length > 0 && (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {plants.map((plant) => (
-            <Card key={plant.id} href={`/plants/${plant.id}/guide`} hover>
-              <div className="flex items-center gap-4">
-                <PhotoFrame
-                  src={plant.photo_url}
-                  ratio="square"
-                  className="size-14 shrink-0 rounded-md"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-serif text-base font-bold text-ink">
-                    {plant.nickname || plant.species}
-                  </p>
-                  <p className="mt-0.5 truncate text-xs text-ink-45">
-                    {plant.species}
-                  </p>
-                </div>
-                <Badge>보기</Badge>
-              </div>
-            </Card>
+            <PlantCard
+              key={plant.id}
+              plant={plant}
+              href={`/plants/${plant.id}/guide`}
+              badge={<Badge tone="leaf">가이드 보기</Badge>}
+            />
           ))}
         </div>
       )}
