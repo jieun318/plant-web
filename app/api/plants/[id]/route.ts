@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCATION_MAX, NICKNAME_MAX, cleanText } from "@/lib/plant";
 import { getUserId, removePhotos, supabaseServer } from "@/lib/supabase-server";
+import type { CareLog } from "@/types";
 
 /** GET /api/plants/[id] — 식물 하나와 그 기록 */
 export async function GET(req: NextRequest, ctx: RouteContext<"/api/plants/[id]">) {
@@ -44,7 +45,40 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/plants/[id]"
     console.error("[plant:GET logs]", logError.code, logError.message);
   }
 
-  return NextResponse.json({ plant, logs: logs ?? [] });
+  return NextResponse.json({ plant, logs: await linkDiagnoses(id, logs ?? []) });
+}
+
+// 진단 저장은 diagnoses 한 줄과 care_logs 한 줄을 같은 요청에서 잇달아 넣는다.
+// care_logs 에 진단 id 칸이 없어서, 시각이 가장 가까운 진단을 그 기록의 진단으로 본다.
+const LINK_WINDOW_MS = 60 * 1000;
+
+/** 진단 기록마다 diagnosis_id 를 붙인다. 타임라인에서 눌러 그때 결과를 다시 보게 한다. */
+async function linkDiagnoses(plantId: string, logs: CareLog[]): Promise<CareLog[]> {
+  if (!logs.some((log) => log.type === "diagnose")) return logs;
+
+  const { data: diagnoses, error } = await supabaseServer
+    .from("diagnoses")
+    .select("id, created_at")
+    .eq("plant_id", plantId);
+
+  if (error || !diagnoses?.length) {
+    if (error) console.error("[plant:GET diagnoses]", error.code, error.message);
+    return logs;
+  }
+
+  return logs.map((log) => {
+    if (log.type !== "diagnose") return log;
+
+    const at = new Date(log.created_at).getTime();
+    let best: { id: string; gap: number } | null = null;
+
+    for (const d of diagnoses) {
+      const gap = Math.abs(new Date(d.created_at).getTime() - at);
+      if (gap <= LINK_WINDOW_MS && (!best || gap < best.gap)) best = { id: d.id, gap };
+    }
+
+    return { ...log, diagnosis_id: best?.id ?? null };
+  });
 }
 
 /**

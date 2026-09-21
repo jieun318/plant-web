@@ -62,6 +62,8 @@ export type CareLog = {
   type: "water" | "repot" | "fertilize" | "diagnose";
   memo: string | null;
   created_at: string;
+  /** 진단 기록일 때 그 진단의 id. DB 칸이 아니라 GET /api/plants/[id] 가 붙여준다. */
+  diagnosis_id?: string | null;
 };
 
 // 관리 가이드 (S-07)
@@ -109,11 +111,12 @@ export type DiagnosisResult = {
 
 // DB: diagnoses 테이블
 // reasons / actions / answers 는 jsonb 다.
-// 조치 제목(title)을 담을 칸이 없어 저장되지 않는다.
+// title 은 migration-diagnosis-title.sql 로 추가했다. 그 전에 저장한 진단은 null 이다.
 export type Diagnosis = {
   id: string;
   plant_id: string;
   cause: string;
+  title: string | null;
   reasons: string[];
   actions: string[];
   answers: DiagnosisAnswer[];

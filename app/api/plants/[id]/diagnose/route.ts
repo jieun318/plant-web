@@ -48,6 +48,7 @@ export async function POST(
     const { error } = await supabaseServer.from("diagnoses").insert({
       plant_id: id,
       cause: result.cause,
+      title: result.title,
       reasons: result.reasons,
       actions: result.actions,
       answers,

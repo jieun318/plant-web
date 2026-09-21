@@ -142,6 +142,8 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
     id: log.id,
     date: formatDateTime(log.created_at),
     text: log.memo || LOG_TEXT[log.type],
+    // 진단 기록은 눌러서 그때 결과를 다시 본다
+    href: log.diagnosis_id ? `/plants/${id}/diagnoses/${log.diagnosis_id}` : undefined,
   }));
 
   const wateredToday = Boolean(todaysWaterLog(logs));
