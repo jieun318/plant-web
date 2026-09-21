@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { ImagePlus } from "lucide-react";
+import { useState, type ChangeEvent } from "react";
+import { Camera, ImagePlus } from "lucide-react";
 import { buttonClass } from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { apiFetch } from "@/lib/api";
@@ -81,6 +81,14 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
     }
   }
 
+  // 사진 고르기와 카메라 촬영이 함께 쓴다
+  function pick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // 같은 사진을 다시 골라도 change 가 걸리도록 비워둔다
+    e.target.value = "";
+    handle(file);
+  }
+
   const picker = (
     <label className={buttonClass("primary", "md", false, "cursor-pointer")}>
       {loading ? "판별 중..." : "사진 고르기"}
@@ -88,12 +96,24 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
         type="file"
         accept="image/*"
         disabled={loading}
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          // 같은 사진을 다시 골라도 change 가 걸리도록 비워둔다
-          e.target.value = "";
-          handle(file);
-        }}
+        onChange={pick}
+        className="sr-only"
+      />
+    </label>
+  );
+
+  // capture="environment" 는 모바일에서 후면 카메라를 바로 연다.
+  // 데스크톱은 이 속성을 무시하고 파일 선택 창을 연다. 그래서 숨기지 않고 늘 보여준다.
+  const shooter = (
+    <label className={buttonClass("quiet", "md", false, "cursor-pointer")}>
+      <Camera aria-hidden className="size-4" />
+      카메라로 찍기
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        disabled={loading}
+        onChange={pick}
         className="sr-only"
       />
     </label>
@@ -132,7 +152,10 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
         </p>
         <p className="mt-1 text-xs text-ink-45">JPG, PNG · 한 장이면 충분합니다</p>
 
-        <div className="mt-6">{picker}</div>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          {picker}
+          {shooter}
+        </div>
       </div>
 
       {error && <ErrorMessage className="mt-4">{error}</ErrorMessage>}

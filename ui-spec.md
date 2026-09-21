@@ -131,11 +131,17 @@ Tailwind 에 연결한다. Tailwind v4 라 `tailwind.config` 파일은 없다.
 1. 인사말 `안녕하세요` (xs, `text-ink-45`)
 2. 제목 `어떤 식물이 궁금하세요?` (2줄)
 3. 한 줄 설명 (sm, `text-ink-70`)
-4. **업로드 영역** — 우측 단 전체를 차지한다. 카메라 버튼을 쓰지 않는다
+4. **업로드 영역** — 우측 단 전체를 차지한다
    - 드래그앤드롭 영역 `border-2 border-dashed border-rule bg-sheet`
    - 드래그 중에는 `border-leaf bg-leaf-50`
    - 안내 문구 + 주 버튼 `사진 고르기`
      (`<input type="file" accept="image/*">` 를 감싼 label)
+   - **카메라 촬영** — `사진 고르기` 옆에 `카메라로 찍기` (`<Button>` 의 `quiet` 스타일)
+     (`<input type="file" accept="image/*" capture="environment">` 를 감싼 label,
+     모바일에서 후면 카메라가 바로 열린다)
+     - 사진 고르기와 같은 핸들러로 이어져 같은 판별 흐름을 탄다
+     - **기기를 가리지 않고 항상 보여준다.** 데스크톱 브라우저는 `capture` 를
+       무시하고 파일 선택 창을 열므로 숨길 이유가 없다
 5. **오늘 할 일 카드** — 좌측 단 아래. 물 줄 식물이 있을 때만 표시
    - 썸네일 + `오늘 물 줄 식물 N` + 식물 이름 나열
    - 클릭 시 `/plants` 이동
