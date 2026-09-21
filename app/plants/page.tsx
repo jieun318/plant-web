@@ -86,7 +86,7 @@ export default function PlantsPage() {
         </div>
 
         {plants && plants.length > 0 && (
-          <Button href="/" variant="ghost" size="sm">
+          <Button href="/" variant="link" size="sm">
             새 식물 추가
           </Button>
         )}
@@ -133,7 +133,6 @@ function RecentSection({ records }: { records: Identification[] }) {
           <Card
             key={record.id}
             href={`/result?id=${record.id}`}
-            hover
             className="w-40 shrink-0"
           >
             <PhotoFrame src={record.photo_url} ratio="square" />

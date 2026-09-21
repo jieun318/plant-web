@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-// 오류 안내. 빨강 대신 흙빛을 쓴다.
+// 오류 안내. 박스 없이 alert 글자로만. alert 는 문제가 있을 때만 쓰는 유일한 색이다.
 
 type Props = {
   className?: string;
@@ -10,12 +10,8 @@ type Props = {
 export default function ErrorMessage({ className, children }: Props) {
   return (
     <p
-      className={[
-        "rounded-md bg-clay-50 px-4 py-3 text-sm leading-relaxed text-clay",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      role="alert"
+      className={["text-sm leading-relaxed text-alert", className].filter(Boolean).join(" ")}
     >
       {children}
     </p>

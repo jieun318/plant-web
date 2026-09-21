@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-// 섹션 제목. 제목은 명조로 쓴다.
+// 화면 제목. 본문과 같은 산세리프를 굵게 쓴다. 제목 위에 작은 라벨(kicker)을 얹지 않는다.
+// 구획 제목은 SectionHeader 를 쓴다.
 
 type Props = {
   as?: "h1" | "h2" | "h3";
@@ -8,15 +9,15 @@ type Props = {
   children: ReactNode;
 };
 
-export default function SectionTitle({ as: Tag = "h2", className, children }: Props) {
-  const size = Tag === "h1" ? "text-3xl" : "text-lg";
+const SIZE = {
+  h1: "text-[27px] leading-tight tracking-[-0.03em]",
+  h2: "text-[15px] tracking-[-0.01em]",
+  h3: "text-sm",
+};
 
+export default function SectionTitle({ as: Tag = "h2", className, children }: Props) {
   return (
-    <Tag
-      className={["font-serif font-bold tracking-tight text-ink", size, className]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <Tag className={["font-bold text-ink", SIZE[Tag], className].filter(Boolean).join(" ")}>
       {children}
     </Tag>
   );

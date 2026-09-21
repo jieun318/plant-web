@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 
-// 기록 타임라인. 좌측 세로선 위에 점을 찍고, 최신 항목만 진하게.
-// href 가 있는 항목은 눌러서 자세히 볼 수 있다 (지난 진단 등).
+// 옮기는 중인 컴포넌트. 기록은 DataTable 로 보여준다. 화면을 다 옮기면 지운다.
+// 그때까지는 가는 선으로 나눈 행으로 그린다.
 
 export type TimelineItem = {
   id: string;
@@ -17,25 +16,19 @@ type Props = {
 
 export default function Timeline({ items }: Props) {
   return (
-    <ol className="border-l border-rule pl-5">
-      {items.map((item, i) => (
-        <li key={item.id} className="relative pb-5 last:pb-0">
-          <span
-            className={`absolute -left-6 top-1.5 size-2 rounded-full ${
-              i === 0 ? "bg-leaf" : "bg-rule"
-            }`}
-          />
-          <p className="text-xs text-ink-45">{item.date}</p>
+    <ol>
+      {items.map((item) => (
+        <li key={item.id} className="flex gap-4 border-b border-hair py-2.5 text-[13px]">
+          <span className="w-32 shrink-0 font-mono text-soft">{item.date}</span>
           {item.href ? (
             <Link
               href={item.href}
-              className="mt-0.5 inline-flex items-center gap-0.5 text-sm text-ink underline decoration-rule underline-offset-4 transition-colors hover:decoration-wood"
+              className="text-ink underline decoration-faint underline-offset-4 hover:decoration-ink"
             >
               {item.text}
-              <ChevronRight aria-hidden className="size-3.5 text-ink-45" />
             </Link>
           ) : (
-            <p className="mt-0.5 text-sm text-ink">{item.text}</p>
+            <span className="text-ink">{item.text}</span>
           )}
         </li>
       ))}

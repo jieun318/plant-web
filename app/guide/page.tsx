@@ -73,7 +73,7 @@ export default function GuideIndexPage() {
               key={plant.id}
               plant={plant}
               href={`/plants/${plant.id}/guide`}
-              badge={<Badge tone="leaf">가이드 보기</Badge>}
+              aside={<Badge tone="leaf">가이드 보기</Badge>}
             />
           ))}
         </div>

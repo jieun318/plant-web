@@ -1,6 +1,6 @@
 "use client";
 
-// 한 줄에 나눠 담는 세그먼트 탭. 관리 가이드의 4탭 같은 곳에 쓴다.
+// 텍스트 탭. 아래 가는 선 위에 나란히 두고, 고른 탭만 먹색 밑줄.
 
 type Item = { id: string; label: string };
 
@@ -12,11 +12,7 @@ type Props = {
 
 export default function Tabs({ items, value, onChange }: Props) {
   return (
-    <div
-      role="tablist"
-      className="grid gap-1 rounded-md border border-rule bg-sheet-2 p-1"
-      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-    >
+    <div role="tablist" className="flex gap-6 overflow-x-auto border-b border-hair">
       {items.map((item) => {
         const active = item.id === value;
 
@@ -27,8 +23,10 @@ export default function Tabs({ items, value, onChange }: Props) {
             role="tab"
             aria-selected={active}
             onClick={() => onChange(item.id)}
-            className={`rounded px-3 py-2 text-sm font-medium transition-colors ${
-              active ? "bg-wood text-sheet" : "text-ink-70 hover:text-ink"
+            className={`-mb-px shrink-0 border-b pb-2 text-sm transition-colors ${
+              active
+                ? "border-ink font-semibold text-ink"
+                : "border-transparent text-soft hover:text-ink"
             }`}
           >
             {item.label}

@@ -7,8 +7,6 @@ type Props = {
 
 export default function Loading({ label = "불러오는 중...", className }: Props) {
   return (
-    <p className={["text-sm text-ink-45", className].filter(Boolean).join(" ")}>
-      {label}
-    </p>
+    <p className={["text-sm text-soft", className].filter(Boolean).join(" ")}>{label}</p>
   );
 }

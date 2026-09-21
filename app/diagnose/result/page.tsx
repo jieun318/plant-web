@@ -148,7 +148,7 @@ export default function DiagnosisResultPage() {
       )}
 
       {handoff.saved ? (
-        <Button href={`/plants/${handoff.plantId}`} variant="ghost" full className="mt-8">
+        <Button href={`/plants/${handoff.plantId}`} variant="link" full className="mt-8">
           저장했어요 · 식물로 돌아가기
         </Button>
       ) : (

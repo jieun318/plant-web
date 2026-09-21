@@ -179,7 +179,7 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
           </p>
           <Button
             href={`/diagnose?plantId=${plant.id}`}
-            variant="ghost"
+            variant="link"
             size="sm"
             className="mt-3"
           >
@@ -207,7 +207,7 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
               </div>
               <Button
                 href={`/plants/${plant.id}/edit`}
-                variant="ghost"
+                variant="link"
                 size="sm"
                 className="shrink-0"
               >
@@ -239,7 +239,7 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
                       다음 물주기는 {waterPhrase(daysUntilWater(plant))}예요
                     </p>
                     <Button
-                      variant="quiet"
+                      variant="link"
                       size="sm"
                       onClick={cancelWater}
                       disabled={watering}
@@ -257,7 +257,7 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
                       {watering ? "기록 중..." : "흙이 말랐어요, 기록할게요"}
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="link"
                       onClick={() => setConfirmDays(null)}
                       disabled={watering}
                       full
@@ -270,10 +270,10 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
                     {watering ? "기록 중..." : "물 줬어요"}
                   </Button>
                 )}
-                <Button href={`/diagnose?plantId=${plant.id}`} variant="ghost" full>
+                <Button href={`/diagnose?plantId=${plant.id}`} variant="link" full>
                   잎이 이상해요 · 진단하기
                 </Button>
-                <Button href={`/plants/${plant.id}/guide`} variant="quiet" full>
+                <Button href={`/plants/${plant.id}/guide`} variant="link" full>
                   관리 가이드 보기
                 </Button>
               </div>
@@ -289,7 +289,7 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
                   <Timeline items={items} />
                   {hidden > 0 && (
                     <Button
-                      variant="ghost"
+                      variant="link"
                       size="sm"
                       full
                       className="mt-4"

@@ -251,7 +251,7 @@ function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant="link"
               onClick={() => setConfirming(false)}
               disabled={deleting}
               className="sm:flex-1"
@@ -267,7 +267,7 @@ function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
           </p>
           <Button
             type="button"
-            variant="ghost"
+            variant="link"
             size="sm"
             onClick={() => setConfirming(true)}
             className="mt-3"

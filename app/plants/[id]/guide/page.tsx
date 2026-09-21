@@ -127,7 +127,7 @@ export default function PlantGuidePage({
           <ErrorMessage className="mt-6">{error}</ErrorMessage>
           {/* 실패를 지우면 위의 effect 가 이 탭을 다시 부른다 */}
           <Button
-            variant="ghost"
+            variant="link"
             size="sm"
             className="mt-3"
             onClick={() =>

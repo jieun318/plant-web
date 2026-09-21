@@ -1,17 +1,21 @@
 import type { ReactNode } from "react";
 
-// 라벨 / 값 한 줄. 마지막 줄의 테두리는 부모에서 지운다.
+// 라벨 / 값 한 줄. 위에 가는 선을 긋는다. 표본 라벨의 필드 행과 같은 모양이다.
 
 type Props = {
   label: string;
   value: ReactNode;
+  /** 날짜·범위·숫자 */
+  mono?: boolean;
 };
 
-export default function InfoRow({ label, value }: Props) {
+export default function InfoRow({ label, value, mono = false }: Props) {
   return (
-    <div className="flex justify-between gap-6 border-b border-rule py-3 last:border-b-0">
-      <dt className="shrink-0 text-sm text-ink-45">{label}</dt>
-      <dd className="text-right text-sm font-medium text-ink">{value}</dd>
+    <div className="flex justify-between gap-3 border-t border-hair py-1.5 text-[12.5px]">
+      <dt className="shrink-0 text-soft">{label}</dt>
+      <dd className={["text-right text-ink", mono && "font-mono"].filter(Boolean).join(" ")}>
+        {value}
+      </dd>
     </div>
   );
 }

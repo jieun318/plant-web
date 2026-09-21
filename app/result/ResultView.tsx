@@ -175,7 +175,7 @@ export default function ResultView() {
                   {saving ? "등록 중..." : "내 식물로 등록"}
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="link"
                   onClick={() => register((plantId) => `/plants/${plantId}/guide`)}
                   disabled={saving}
                   className="sm:flex-1"

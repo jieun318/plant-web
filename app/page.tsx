@@ -66,7 +66,7 @@ function TodayCard({ plants }: { plants: Plant[] }) {
   const thumbnail = plants.find((p) => p.photo_url)?.photo_url;
 
   return (
-    <Card href="/plants" hover className="mt-10 max-w-md">
+    <Card href="/plants" className="mt-10 max-w-md">
       <div className="flex items-center gap-4">
         <PhotoFrame src={thumbnail} size="thumb" />
 

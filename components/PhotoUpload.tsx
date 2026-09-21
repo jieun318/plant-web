@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent } from "react";
-import { Camera, ImagePlus } from "lucide-react";
 import { buttonClass } from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import { apiFetch } from "@/lib/api";
@@ -106,9 +105,9 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
 
   // capture="environment" 는 모바일에서 후면 카메라를 바로 연다.
   // 데스크톱은 이 속성을 무시하고 파일 선택 창을 연다. 그래서 숨기지 않고 늘 보여준다.
+  // 보조 액션이라 밑줄 텍스트 링크로 둔다.
   const shooter = (
-    <label className={buttonClass("quiet", "md", false, "cursor-pointer")}>
-      <Camera aria-hidden className="size-4" />
+    <label className={buttonClass("link", "md", false, "cursor-pointer")}>
       카메라로 찍기
       <input
         type="file"
@@ -143,18 +142,17 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
           setDragging(false);
           handle(e.dataTransfer.files?.[0]);
         }}
-        className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-16 text-center transition-colors ${
-          dragging ? "border-leaf bg-leaf-50" : "border-rule bg-sheet"
+        // 끌어다 놓는 자리라는 표시로 점선만 두른다. 배경·둥근 모서리는 두지 않는다
+        className={`flex flex-col items-center justify-center border border-dashed px-6 py-16 text-center transition-colors ${
+          dragging ? "border-ink" : "border-hair"
         }`}
       >
-        <ImagePlus aria-hidden className="size-8 text-ink-45" strokeWidth={1.5} />
-
-        <p className="mt-4 text-sm font-medium text-ink">
+        <p className="text-sm font-medium text-ink">
           {loading ? "사진을 살펴보는 중입니다" : "사진을 여기에 끌어다 놓으세요"}
         </p>
-        <p className="mt-1 text-xs text-ink-45">JPG, PNG, HEIC · 한 장이면 충분합니다</p>
+        <p className="mt-1 font-mono text-[11px] text-soft">JPG, PNG, HEIC · 10MB 이하</p>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
           {picker}
           {shooter}
         </div>

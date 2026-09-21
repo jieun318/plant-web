@@ -157,7 +157,7 @@ export default function DiagnoseFlow() {
         <>
           <ErrorMessage className="mt-8">{error}</ErrorMessage>
           <Button
-            variant="ghost"
+            variant="link"
             size="sm"
             className="mt-3"
             onClick={() => step(answers)}
@@ -256,7 +256,7 @@ function PlantPicker() {
           key={plant.id}
           plant={plant}
           href={`/diagnose?plantId=${plant.id}`}
-          badge={<Badge tone="leaf">진단하기</Badge>}
+          aside={<Badge tone="leaf">진단하기</Badge>}
         />
       ))}
     </div>
