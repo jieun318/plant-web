@@ -37,7 +37,8 @@ export default function Home() {
   return (
     <PageShell>
       <div className="grid items-start gap-10 md:grid-cols-2 md:gap-14 lg:gap-20">
-        <div>
+        {/* min-w-0: 오늘 카드의 한 줄짜리 이름이 칸을 화면 밖으로 밀어내지 않게 한다 */}
+        <div className="min-w-0">
           <p className="text-xs tracking-wide text-ink-45">안녕하세요</p>
 
           <h1 className="mt-2 font-serif text-4xl leading-tight font-bold tracking-tight text-ink md:text-5xl">
@@ -67,11 +68,7 @@ function TodayCard({ plants }: { plants: Plant[] }) {
   return (
     <Card href="/plants" hover className="mt-10 max-w-md">
       <div className="flex items-center gap-4">
-        <PhotoFrame
-          src={thumbnail}
-          ratio="square"
-          className="size-14 shrink-0 rounded-md"
-        />
+        <PhotoFrame src={thumbnail} size="thumb" />
 
         <div className="min-w-0 flex-1">
           <SectionTitle as="h2">오늘 물 줄 식물 {plants.length}</SectionTitle>
