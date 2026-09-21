@@ -9,6 +9,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import InfoRow from "@/components/ui/InfoRow";
+import Loading from "@/components/ui/Loading";
 import Panel from "@/components/ui/Panel";
 import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -106,7 +107,11 @@ export default function ResultView() {
 
   // 서버/hydration 중이거나 기록을 불러오는 중
   if (record === undefined || (!id && handoff === undefined)) {
-    return <PageShell />;
+    return (
+      <PageShell>
+        <Loading label="판별 결과를 불러오는 중..." />
+      </PageShell>
+    );
   }
 
   const result = record ? toIdentifyResult(record) : handoff?.result;
@@ -175,7 +180,7 @@ export default function ResultView() {
                   disabled={saving}
                   className="sm:flex-1"
                 >
-                  관리법 먼저 보기
+                  등록하고 관리법 보기
                 </Button>
               </div>
 

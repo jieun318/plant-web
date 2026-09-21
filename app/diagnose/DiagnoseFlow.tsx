@@ -5,9 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
+import PhotoUpload from "@/components/PhotoUpload";
 import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
+import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { apiFetch } from "@/lib/api";
 import { saveDiagnosis } from "@/lib/handoff";
@@ -15,6 +19,7 @@ import type {
   DiagnosisAnswer,
   DiagnosisQuestion,
   DiagnosisResult,
+  Plant,
 } from "@/types";
 
 const TOTAL = 3;
@@ -116,16 +121,11 @@ export default function DiagnoseFlow() {
   if (!plantId) {
     return (
       <PageShell className="max-w-2xl">
-        <BackLink href="/plants" label="내 식물" />
-        <SectionTitle as="h1" className="mt-6">
-          어떤 식물을 진단할까요?
-        </SectionTitle>
+        <SectionTitle as="h1">어떤 식물을 진단할까요?</SectionTitle>
         <p className="mt-2 text-sm leading-relaxed text-ink-70">
-          진단할 식물을 먼저 골라주세요.
+          상태가 걱정되는 식물을 고르면 몇 가지 질문으로 원인을 찾아드려요.
         </p>
-        <Button href="/plants" className="mt-6">
-          내 식물 보러 가기
-        </Button>
+        <PlantPicker />
       </PageShell>
     );
   }
@@ -180,6 +180,80 @@ export default function DiagnoseFlow() {
         </>
       )}
     </PageShell>
+  );
+}
+
+/** 진단 탭으로 바로 들어왔을 때. 다른 화면으로 보내지 않고 여기서 고르게 한다. */
+function PlantPicker() {
+  // null = 아직 불러오는 중
+  const [plants, setPlants] = useState<Plant[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const res = await apiFetch("/api/plants");
+        const data = await res.json();
+
+        if (!alive) return;
+
+        if (!res.ok) {
+          setError(data.error ?? "목록을 불러오지 못했습니다.");
+          return;
+        }
+
+        setPlants(data as Plant[]);
+      } catch (e) {
+        if (alive) {
+          setError(e instanceof Error ? e.message : "목록을 불러오지 못했습니다.");
+        }
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (error) return <ErrorMessage className="mt-8">{error}</ErrorMessage>;
+  if (!plants) return <Loading className="mt-8" />;
+
+  if (plants.length === 0) {
+    return (
+      <div className="mt-8">
+        <EmptyState
+          title="진단할 식물이 없어요"
+          description="식물을 먼저 등록하면 그 식물의 사진과 함께 진단해 드립니다."
+          action={<PhotoUpload variant="button" />}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-8 flex flex-col gap-3">
+      {plants.map((plant) => (
+        <Card key={plant.id} href={`/diagnose?plantId=${plant.id}`} hover>
+          <div className="flex items-center gap-4">
+            <PhotoFrame
+              src={plant.photo_url}
+              ratio="square"
+              className="size-14 shrink-0 rounded-md"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-serif text-base font-bold text-ink">
+                {plant.nickname || plant.species}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-ink-45">
+                {plant.species}
+              </p>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 }
 

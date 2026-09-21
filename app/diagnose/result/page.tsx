@@ -138,6 +138,15 @@ export default function DiagnosisResultPage() {
 
       {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
 
+      {/* 저장하면 물주기 일정이 바뀐다. 모르고 누르면 달력이 갑자기 달라 보인다. */}
+      {result.waterIntervalDays > 0 && (
+        <p className="mt-6 text-sm leading-relaxed text-ink-70">
+          저장하면 물주기 간격이{" "}
+          <span className="font-medium text-ink">{result.waterIntervalDays}일</span>로
+          바뀌어요.
+        </p>
+      )}
+
       {handoff.saved ? (
         <Button href={`/plants/${handoff.plantId}`} variant="ghost" full className="mt-8">
           저장했어요 · 식물로 돌아가기
