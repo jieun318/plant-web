@@ -2,12 +2,15 @@ import { GoogleGenAI } from "@google/genai";
 import {
   DIAGNOSE_QUESTION_PROMPT,
   DIAGNOSE_RESULT_PROMPT,
+  GUIDE_PROMPT,
   IDENTIFY_PROMPT,
 } from "./prompts";
 import type {
   DiagnosisAnswer,
   DiagnosisQuestion,
   DiagnosisResult,
+  GuideContent,
+  GuideTopic,
   IdentifyResult,
 } from "@/types";
 
@@ -120,4 +123,38 @@ export async function concludeDiagnosis(
   return ask<DiagnosisResult>(
     buildParts(DIAGNOSE_RESULT_PROMPT, species, answers, photo)
   );
+}
+
+const TOPIC_LABEL: Record<GuideTopic, string> = {
+  water: "물주기",
+  light: "빛",
+  repot: "분갈이",
+  fertilize: "비료",
+};
+
+export type GuideInput = {
+  species: string;
+  scientificName: string | null;
+  /** 두는 자리. 없을 수 있다 */
+  location: string | null;
+  /** 등록 후 며칠째인지 */
+  days: number;
+  topic: GuideTopic;
+};
+
+/**
+ * 한 탭의 관리법을 받는다.
+ *
+ * 종명만 주면 검색 결과와 같은 답이 온다.
+ * 두는 자리와 키운 기간을 함께 줘야 이 사람의 식물에 맞는 답이 된다.
+ */
+export async function buildGuide(input: GuideInput): Promise<GuideContent> {
+  const facts = [
+    `식물: ${input.species}${input.scientificName ? ` (${input.scientificName})` : ""}`,
+    `두는 자리: ${input.location || "알려주지 않음"}`,
+    `키운 기간: 등록 후 ${input.days}일째`,
+    `알고 싶은 것: ${TOPIC_LABEL[input.topic]}`,
+  ].join("\n");
+
+  return ask<GuideContent>([{ text: `${facts}\n\n${GUIDE_PROMPT}` }]);
 }

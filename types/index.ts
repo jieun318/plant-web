@@ -64,6 +64,28 @@ export type CareLog = {
   created_at: string;
 };
 
+// 관리 가이드 (S-07)
+export type GuideTopic = "water" | "light" | "repot" | "fertilize";
+
+// Gemini 가 만드는 부분
+export type GuideContent = {
+  when: string;    // 언제 하나요 — 시기 판단 기준
+  steps: string[]; // 순서 3~5개
+  caution: string; // 주의 문구 한 줄
+};
+
+// DB: guides 테이블
+// 식물마다 탭마다 한 줄. 한 번 만들면 다시 쓴다.
+export type CareGuide = {
+  id: string;
+  plant_id: string;
+  topic: GuideTopic;
+  when_to: string;
+  steps: string[];
+  caution: string | null;
+  created_at: string;
+};
+
 // 진단 문답 (S-03)
 export type DiagnosisQuestion = {
   question: string;   // 질문 한 줄
