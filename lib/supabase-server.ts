@@ -40,6 +40,22 @@ export async function uploadPhoto(file: File, folder = "temp") {
   return data.publicUrl;
 }
 
+/** 공개 URL 에서 버킷 안의 경로를 꺼낸다. 이 버킷 사진이 아니면 null. */
+function photoPath(publicUrl: string): string | null {
+  const marker = "/object/public/plant-photos/";
+  const at = publicUrl.indexOf(marker);
+  return at === -1 ? null : decodeURIComponent(publicUrl.slice(at + marker.length));
+}
+
+/** 사진을 Storage 에서 지운다. 실패해도 던지지 않는다. 사진 하나 때문에 삭제를 되돌릴 수는 없다. */
+export async function removePhotos(publicUrls: string[]) {
+  const paths = publicUrls.map(photoPath).filter((p): p is string => Boolean(p));
+  if (paths.length === 0) return;
+
+  const { error } = await supabaseServer.storage.from("plant-photos").remove(paths);
+  if (error) console.warn("[removePhotos]", error.message);
+}
+
 /**
  * Authorization 헤더의 토큰을 검증해 사용자 ID 를 돌려준다.
  * 클라이언트가 보낸 ID 를 그대로 믿으면 남의 데이터를 읽고 쓸 수 있으므로

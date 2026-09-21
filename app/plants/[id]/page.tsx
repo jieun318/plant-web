@@ -183,15 +183,25 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
           <div className="flex flex-col gap-6">
             <PhotoFrame src={plant.photo_url} ratio="video" />
 
-            <div>
-              <SectionTitle as="h1">
-                {plant.nickname || plant.species}
-              </SectionTitle>
-              <p className="mt-1 text-xs text-ink-45">
-                {[plant.location, `${daysSinceRegistered(plant)}일째 함께`]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <SectionTitle as="h1">
+                  {plant.nickname || plant.species}
+                </SectionTitle>
+                <p className="mt-1 text-xs text-ink-45">
+                  {[plant.location, `${daysSinceRegistered(plant)}일째 함께`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </div>
+              <Button
+                href={`/plants/${plant.id}/edit`}
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+              >
+                수정
+              </Button>
             </div>
 
             <Panel className="text-center">

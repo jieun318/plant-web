@@ -4,11 +4,13 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 // 액션 컨트롤. href 를 주면 링크로, 없으면 버튼으로 그린다.
 // 겉모습이 같은 것을 두 가지로 나누면 스타일이 갈라지기 때문이다.
 
-type Variant = "primary" | "ghost" | "quiet";
+type Variant = "primary" | "ghost" | "quiet" | "danger";
 type Size = "sm" | "md";
 
 const VARIANT: Record<Variant, string> = {
   primary: "bg-leaf text-sheet hover:bg-leaf/90",
+  // 되돌릴 수 없는 동작(삭제)의 마지막 확인에만 쓴다
+  danger: "bg-clay text-sheet hover:bg-clay/90",
   ghost: "border border-rule bg-sheet text-ink-70 hover:border-wood hover:text-ink",
   quiet: "text-ink-70 hover:bg-sheet-2 hover:text-ink",
 };
