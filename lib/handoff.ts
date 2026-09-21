@@ -114,3 +114,30 @@ export function getDiagnosisSnapshot(): DiagnosisHandoff | null {
 export function getDiagnosisServerSnapshot(): DiagnosisHandoff | null | undefined {
   return undefined;
 }
+
+// ── 삭제한 식물 (수정 화면 → 상세) ──────────────────────────────────
+// 삭제 후 뒤로 가기를 누르면 지운 식물의 상세로 돌아간다.
+// 방금 지운 식물이면 "없는 식물입니다" 대신 목록으로 보낸다.
+// 잘못된 주소로 들어온 경우와 구분하려고 지운 id 를 적어 둔다.
+
+const DELETED_KEY = "plantweb:deleted";
+
+function readDeleted(): string[] {
+  try {
+    return JSON.parse(sessionStorage.getItem(DELETED_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+export function markPlantDeleted(id: string) {
+  try {
+    sessionStorage.setItem(DELETED_KEY, JSON.stringify([...readDeleted(), id]));
+  } catch {
+    // 못 적어도 삭제는 끝났다. 뒤로 가면 "없는 식물입니다"가 보일 뿐이다.
+  }
+}
+
+export function wasPlantDeleted(id: string): boolean {
+  return readDeleted().includes(id);
+}

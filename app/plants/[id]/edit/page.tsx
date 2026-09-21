@@ -11,6 +11,7 @@ import Loading from "@/components/ui/Loading";
 import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { apiFetch } from "@/lib/api";
+import { markPlantDeleted } from "@/lib/handoff";
 import { LOCATIONS, LOCATION_MAX, NICKNAME_MAX } from "@/lib/plant";
 import type { Plant } from "@/types";
 
@@ -218,7 +219,9 @@ function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
         return;
       }
 
-      // 지운 식물 상세로 돌아가지 않게 기록을 바꿔 넘긴다
+      // 수정 화면 기록은 목록으로 바꿔 넘긴다. 그 앞의 상세는 지울 수 없으니
+      // 표시해 두고, 뒤로 가서 상세가 열리면 거기서 다시 목록으로 보낸다.
+      markPlantDeleted(plantId);
       router.replace("/plants");
     } catch {
       setError("삭제에 실패했습니다. 연결을 확인해 주세요.");

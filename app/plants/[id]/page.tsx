@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
@@ -13,6 +14,7 @@ import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Timeline, { type TimelineItem } from "@/components/ui/Timeline";
 import { apiFetch } from "@/lib/api";
+import { wasPlantDeleted } from "@/lib/handoff";
 import {
   EARLY_WARN_COUNT,
   countEarlyWaterings,
@@ -34,6 +36,7 @@ const VISIBLE_LOGS = 5;
 
 export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [plant, setPlant] = useState<Plant | null>(null);
   const [logs, setLogs] = useState<CareLog[]>([]);
@@ -44,6 +47,12 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
   const [confirmDays, setConfirmDays] = useState<number | null>(null);
 
   useEffect(() => {
+    // 방금 지운 식물로 뒤로 가기를 한 경우. 없는 식물 안내 대신 목록으로 보낸다.
+    if (wasPlantDeleted(id)) {
+      router.replace("/plants");
+      return;
+    }
+
     let alive = true;
 
     (async () => {
@@ -68,7 +77,7 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, router]);
 
   /** force 는 "그래도 주겠다"는 확인을 거쳤다는 뜻이다. */
   async function water(force = false) {
