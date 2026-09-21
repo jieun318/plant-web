@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>식물집사 · 관찰 중심 구조</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --oat:#E3DAC6; --sheet:#FBF8F1; --sheet-2:#F4EFE3;
+  --wood:#6B5741; --ink:#2B2A25; --ink-70:#5C584E; --ink-45:#918B7D;
+  --rule:#D5CCB8; --leaf:#2F5D3A; --leaf-50:#E4EBE0;
+  --clay:#8A5A38; --clay-50:#F0E4D8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'IBM Plex Sans KR',sans-serif;color:var(--ink);background:var(--oat);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.35) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 20% 0%, rgba(255,255,255,.5), transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(107,87,65,.10), transparent 55%);
+  padding:36px 22px 64px;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1140px;margin:0 auto}
+
+/* ---------- 문서 헤더 ---------- */
+.doc-head{border-bottom:2px solid var(--wood);padding-bottom:14px;margin-bottom:22px}
+.doc-head h1{font-family:'Gowun Batang',serif;font-size:26px;font-weight:700}
+.doc-head p{font-size:13.5px;color:var(--ink-70);margin-top:7px;max-width:70ch;line-height:1.75}
+.oneliner{
+  margin-top:14px;background:var(--sheet);border-left:3px solid var(--leaf);
+  padding:13px 17px;border-radius:0 6px 6px 0;
+  font-family:'Gowun Batang',serif;font-size:17px;font-weight:700;line-height:1.55;
+}
+.oneliner small{display:block;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;
+  font-weight:500;color:var(--ink-45);margin-bottom:4px;letter-spacing:.03em}
+
+/* ---------- 전 / 후 비교 ---------- */
+.compare{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:stretch;margin-bottom:28px}
+.cmp{background:rgba(251,248,241,.72);border:1px solid var(--rule);border-radius:8px;padding:15px 17px}
+.cmp h3{font-size:12px;font-weight:600;color:var(--ink-45);letter-spacing:.03em;margin-bottom:10px}
+.navmock{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.navmock span{font-size:12px;border:1px solid var(--rule);background:var(--sheet);
+  padding:4px 10px;border-radius:4px;color:var(--ink-70)}
+.navmock span.main{background:var(--leaf);color:var(--sheet);border-color:var(--leaf);font-weight:600}
+.navmock span.gone{text-decoration:line-through;color:var(--ink-45);background:none}
+.cmp p{font-size:12.5px;line-height:1.7;color:var(--ink-70)}
+.cmp p b{color:var(--ink);font-weight:600}
+.arrow{display:flex;align-items:center;font-size:20px;color:var(--wood)}
+
+/* ---------- 화면 전환 ---------- */
+.viewsw{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.vs{font-size:12.5px;font-family:inherit;border:1px solid var(--rule);
+  background:rgba(251,248,241,.72);color:var(--ink-70);padding:8px 14px;border-radius:4px;cursor:pointer}
+.vs:hover{border-color:var(--leaf);color:var(--leaf)}
+.vs.on{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+
+/* ---------- 브라우저 ---------- */
+.browser{border:1px solid var(--wood);border-radius:9px;overflow:hidden;
+  box-shadow:0 14px 34px rgba(70,55,38,.16);background:var(--sheet)}
+.chrome{background:var(--sheet-2);border-bottom:1px solid var(--rule);
+  padding:9px 13px;display:flex;align-items:center;gap:11px}
+.dots{display:flex;gap:6px}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--rule);display:block}
+.urlbar{flex:1;background:var(--sheet);border:1px solid var(--rule);border-radius:20px;
+  padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-70)}
+
+.site-nav{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:15px 34px;border-bottom:1px solid var(--rule);background:var(--sheet)}
+.brand{display:flex;align-items:center;gap:9px}
+.brand span:first-child{width:25px;height:25px;border-radius:50% 6px 50% 6px;background:var(--leaf);display:block}
+.brand span:last-child{font-family:'Gowun Batang',serif;font-size:18px;font-weight:700}
+.menu{display:flex;gap:26px}
+.menu a{font-size:13.5px;color:var(--ink-70);cursor:pointer;padding-bottom:2px}
+.menu a:hover{color:var(--leaf)}
+.menu a.on{color:var(--ink);font-weight:600;border-bottom:1.5px solid var(--leaf)}
+.acct{font-size:12.5px;color:var(--ink-70);border:1px solid var(--rule);border-radius:20px;padding:5px 12px}
+
+.page{padding:34px 34px 44px;min-height:520px;background:var(--sheet)}
+.page.hide{display:none}
+.inner{max-width:980px;margin:0 auto}
+
+.kicker{font-size:12px;color:var(--ink-45)}
+.h1{font-family:'Gowun Batang',serif;font-size:28px;font-weight:700;line-height:1.3}
+.h2{font-family:'Gowun Batang',serif;font-size:19px;font-weight:700}
+.h3{font-size:14px;font-weight:600}
+.txt{font-size:13.5px;line-height:1.8;color:var(--ink-70)}
+.small{font-size:12px;color:var(--ink-45);line-height:1.65}
+
+.chip{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:3px;
+  background:var(--leaf-50);color:var(--leaf);white-space:nowrap}
+.chip.warn{background:var(--clay-50);color:var(--clay)}
+.chip.off{background:var(--sheet-2);color:var(--ink-45)}
+
+.btn{border:1px solid var(--leaf);background:var(--leaf);color:var(--sheet);font-family:inherit;
+  font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:5px;cursor:pointer}
+.btn.quiet{border-color:var(--rule);color:var(--ink-70);background:none;font-weight:400}
+.btn.sm{font-size:12px;padding:7px 12px}
+
+.ph{background:repeating-linear-gradient(45deg,var(--rule) 0 1px,transparent 1px 10px),var(--sheet-2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-45);border-radius:5px}
+
+.panel{border:1px solid var(--rule);border-radius:8px;background:var(--sheet);padding:18px 20px}
+
+/* ---------- 홈 ---------- */
+.summary{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.sum{border:1px solid var(--rule);border-radius:7px;padding:10px 16px;background:var(--sheet)}
+.sum b{font-family:'Gowun Batang',serif;font-size:22px;margin-right:4px}
+.sum span{font-size:12px;color:var(--ink-45)}
+.today-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
+.pcard{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--sheet);
+  cursor:pointer;transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column}
+.pcard:hover{box-shadow:0 8px 18px rgba(70,55,38,.12);transform:translateY(-2px)}
+.pcard .ph{height:130px;border-radius:0}
+.pcard .bd{padding:13px 15px 15px;display:flex;flex-direction:column;gap:9px;flex:1}
+.env{display:flex;gap:14px;font-size:12.5px}
+.env b{font-weight:600}
+.env .bad{color:var(--clay)}
+.ai{font-size:12.5px;line-height:1.65;color:var(--ink-70);background:var(--sheet-2);
+  border-radius:5px;padding:8px 10px}
+.ai::before{content:"AI 관찰";display:block;font-size:10px;font-weight:600;color:var(--leaf);margin-bottom:2px}
+.pcard.nodev .ai::before{content:""}
+.pcard.nodev .ph{opacity:.55}
+
+/* ---------- 관찰일지 ---------- */
+.obs-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.meta span{font-size:12px;color:var(--ink-45)}
+.live{display:inline-flex;align-items:center;gap:6px;color:var(--leaf)!important}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--leaf);display:block}
+.obs-top{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;margin-top:22px}
+.obs-top>div,.two>div,.today-grid>*{min-width:0}
+.big-ph{height:260px}
+.now{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gauge{font-family:'Gowun Batang',serif;font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.gauge small{font-size:16px;font-weight:400}
+.range{font-size:11.5px;color:var(--ink-45);margin-top:3px}
+.range.bad{color:var(--clay)}
+.chart{width:100%;height:150px;display:block}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--ink-45);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:2px;vertical-align:middle;margin-right:5px}
+
+.strip{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;margin-top:10px}
+.strip .s{flex:0 0 92px}
+.strip .s .ph{height:70px}
+.strip .s span{display:block;font-size:10.5px;color:var(--ink-45);margin-top:4px;text-align:center}
+
+.log{margin-top:6px}
+.log-item{display:grid;grid-template-columns:86px 70px 1fr auto;gap:14px;align-items:start;
+  padding:14px 0;border-bottom:1px solid var(--sheet-2)}
+.log-item:last-child{border-bottom:0}
+.log-date{font-size:12.5px;font-weight:600}
+.log-date small{display:block;font-size:11px;font-weight:400;color:var(--ink-45)}
+.log-item .ph{height:52px}
+.log-body{font-size:13px;line-height:1.7;color:var(--ink-70)}
+.log-body .envs{font-size:11.5px;color:var(--ink-45);margin-bottom:3px}
+
+.sub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px dashed var(--rule)}
+.sub-actions .small{width:100%;margin-bottom:2px}
+
+/* ---------- 식물 추가 ---------- */
+.stepper{display:flex;gap:0;margin:22px 0 26px}
+.st{flex:1;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-45);
+  padding-bottom:10px;border-bottom:2px solid var(--rule);cursor:pointer}
+.st b{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--rule);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:0 0 24px}
+.st.on{color:var(--ink);font-weight:600;border-bottom-color:var(--leaf)}
+.st.on b{background:var(--leaf);border-color:var(--leaf);color:var(--sheet)}
+.st.done b{background:var(--leaf-50);border-color:var(--leaf-50);color:var(--leaf)}
+.stp{display:none}
+.stp.on{display:block}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.drop{border:1.5px dashed var(--rule);border-radius:8px;background:var(--sheet-2);
+  padding:44px 24px;text-align:center}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.input{border:1px solid var(--rule);border-radius:5px;padding:10px 12px;font-size:13px;
+  color:var(--ink-70);background:var(--sheet)}
+.base{border-left:3px solid var(--leaf);background:var(--leaf-50);padding:12px 15px;
+  border-radius:0 6px 6px 0;font-size:12.5px;line-height:1.75;color:#24472C}
+.base b{font-weight:600}
+.token{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--ink);color:#E9E4D6;
+  border-radius:6px;padding:14px 16px;letter-spacing:.02em;word-break:break-all}
+.ol{list-style:none;counter-reset:n}
+.ol li{counter-increment:n;position:relative;padding:6px 0 6px 30px;font-size:13px;line-height:1.7;color:var(--ink-70)}
+.ol li::before{content:counter(n);position:absolute;left:0;top:7px;width:20px;height:20px;border-radius:50%;
+  background:var(--leaf-50);color:var(--leaf);font-size:11px;font-weight:600;
+  display:flex;align-items:center;justify-content:center}
+
+.foot{border-top:1px solid var(--rule);background:var(--sheet-2);padding:15px 34px;
+  font-size:11.5px;color:var(--ink-45);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* ---------- 노트 ---------- */
+.notes{margin-top:36px;border-top:2px solid var(--wood);padding-top:22px}
+.notes h3{font-family:'Gowun Batang',serif;font-size:18px;font-weight:700;margin-bottom:14px}
+.ncols{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.ncol h4{font-size:12px;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--rule);margin-bottom:9px}
+.ncol ul{list-style:none}
+.ncol li{font-size:12.5px;line-height:1.75;padding:4px 0 4px 13px;position:relative;color:var(--ink-70)}
+.ncol li::before{content:"";position:absolute;left:0;top:11px;width:5px;height:1px;background:var(--ink-45)}
+.ncol li b{color:var(--ink);font-weight:600}
+
+@media(max-width:960px){
+  .compare{grid-template-columns:1fr}
+  .arrow{justify-content:center;transform:rotate(90deg)}
+  .today-grid{grid-template-columns:1fr 1fr}
+  .obs-top,.two,.ncols{grid-template-columns:1fr}
+  .log-item{grid-template-columns:70px 1fr}
+  .log-item .ph,.log-item .chip{display:none}
+  .menu{gap:14px}
+  .page{padding:24px 18px 32px}
+  .site-nav{padding:13px 18px;flex-wrap:wrap}
+}
+
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:#E3DAC6}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){background:#1F1B16}
+  :root:not([data-theme="light"]) body{background:#1F1B16;background-image:none}
+  :root:not([data-theme="light"]) .doc-head h1,
+  :root:not([data-theme="light"]) .notes h3,
+  :root:not([data-theme="light"]) .ncol h4,
+  :root:not([data-theme="light"]) .ncol li b{color:#EFE8D8}
+  :root:not([data-theme="light"]) .doc-head p,
+  :root:not([data-theme="light"]) .ncol li{color:#B9B09E}
+  :root:not([data-theme="light"]) .doc-head,
+  :root:not([data-theme="light"]) .notes{border-color:#8C7458}
+  :root:not([data-theme="light"]) .ncol h4{border-color:#4A4033}
+  :root:not([data-theme="light"]) .arrow{color:#B9A07E}
+}
+:root[data-theme="dark"]{background:#1F1B16}
+:root[data-theme="dark"] body{background:#1F1B16;background-image:none}
+:root[data-theme="dark"] .doc-head h1,
+:root[data-theme="dark"] .notes h3,
+:root[data-theme="dark"] .ncol h4,
+:root[data-theme="dark"] .ncol li b{color:#EFE8D8}
+:root[data-theme="dark"] .doc-head p,
+:root[data-theme="dark"] .ncol li{color:#B9B09E}
+:root[data-theme="dark"] .doc-head,
+:root[data-theme="dark"] .notes{border-color:#8C7458}
+:root[data-theme="dark"] .ncol h4{border-color:#4A4033}
+:root[data-theme="dark"] .arrow{color:#B9A07E}
+.page{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="doc-head">
+    <h1>식물집사 · 관찰 중심으로 바꾼 구조</h1>
+    <p>교수님 피드백 "기능이 이것저것 많다, 주가 뭐냐"를 반영했습니다. 기존에 만든 판별·진단은 지우지 않고, 관찰을 위한 한 단계로 자리를 옮겼습니다.</p>
+    <div class="oneliner">
+      <small>주가 뭐냐고 물으면</small>
+      라즈베리파이가 식물 옆에서 매일 사진과 온습도를 기록하고, AI가 그걸 보고 관찰일지를 써준다.
+    </div>
+  </header>
+
+  <div class="compare">
+    <div class="cmp">
+      <h3>전 — 기능이 나란히 있음</h3>
+      <div class="navmock">
+        <span>홈</span><span>내 식물</span><span>진단</span><span>가이드</span>
+      </div>
+      <p>판별, 진단, 가이드, 센서가 <b>같은 무게</b>로 메뉴에 올라가 있어서 무엇이 중심인지 보이지 않았습니다.</p>
+    </div>
+    <div class="arrow">→</div>
+    <div class="cmp">
+      <h3>후 — 관찰이 중심</h3>
+      <div class="navmock">
+        <span class="main">오늘</span><span class="main">관찰일지</span><span>식물 추가</span>
+        <span class="gone">진단</span><span class="gone">가이드</span>
+      </div>
+      <p>메뉴는 <b>관찰</b>만 남깁니다. 판별은 식물 추가의 1단계로, 진단과 가이드는 관찰일지 안의 작은 버튼으로 옮깁니다.</p>
+    </div>
+  </div>
+
+  <div class="viewsw" id="vsw">
+    <button class="vs on" data-v="home">① 오늘</button>
+    <button class="vs" data-v="obs">② 관찰일지</button>
+    <button class="vs" data-v="add">③ 식물 추가</button>
+  </div>
+
+  <div class="browser">
+    <div class="chrome">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="urlbar" id="url">plant-web.vercel.app</div>
+    </div>
+
+    <nav class="site-nav">
+      <div class="brand"><span></span><span>식물집사</span></div>
+      <div class="menu" id="menu">
+        <a class="on" data-v="home">오늘</a>
+        <a data-v="obs">관찰일지</a>
+        <a data-v="add">식물 추가</a>
+      </div>
+      <div class="acct">게스트 ▾</div>
+    </nav>
+
+    <!-- ① 오늘 -->
+    <section class="page" id="home">
+      <div class="inner">
+        <p class="kicker">9월 21일 월요일 · 오전 10시 기록 기준</p>
+        <div style="height:6px"></div>
+        <p class="h1">오늘의 식물</p>
+
+        <div class="summary">
+          <div class="sum"><b>2</b><span>관찰 중</span></div>
+          <div class="sum"><b style="color:var(--clay)">1</b><span>확인 필요</span></div>
+          <div class="sum"><b style="color:var(--ink-45)">1</b><span>기기 미연결</span></div>
+        </div>
+
+        <div class="today-grid">
+          <div class="pcard" data-v="obs">
+            <div class="ph">오늘 10:00 자동 촬영</div>
+            <div class="bd">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <span class="h3">몬스테라</span><span class="chip">좋음</span>
+              </div>
+              <div class="env"><span>온도 <b>23.4°</b></span><span>습도 <b>54%</b></span></div>
+              <div class="ai">새 잎이 어제보다 조금 더 펼쳐졌어요. 온습도 모두 적정 범위예요.</div>
+            </div>
+          </div>
+
+          <div class="pcard" data-v="obs">
+            <div class="ph">오늘 10:00 자동 촬영</div>
+            <div class="bd">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <span class="h3">스킨답서스</span><span class="chip warn">확인 필요</span>
+              </div>
+              <div class="env"><span>온도 <b>24.1°</b></span><span>습도 <b class="bad">31%</b></span></div>
+              <div class="ai">사흘째 습도가 낮고, 아래쪽 잎 끝이 갈색으로 변하기 시작했어요.</div>
+            </div>
+          </div>
+
+          <div class="pcard nodev">
+            <div class="ph">등록 사진</div>
+            <div class="bd">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <span class="h3">스투키</span><span class="chip off">기기 미연결</span>
+              </div>
+              <p class="small">기기를 연결하면 매일 자동으로 관찰합니다.</p>
+              <div style="margin-top:auto"><button class="btn quiet sm">기기 연결</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ② 관찰일지 -->
+    <section class="page hide" id="obs">
+      <div class="inner">
+        <div class="obs-head">
+          <div>
+            <p class="kicker" style="cursor:pointer" data-v="home">← 오늘</p>
+            <div style="height:8px"></div>
+            <p class="h1">스킨답서스 관찰일지</p>
+            <div class="meta">
+              <span>거실 안쪽</span>
+              <span>등록 34일째</span>
+              <span class="live"><i></i>기기 plant-02 · 10분 전 기록</span>
+            </div>
+          </div>
+          <span class="chip warn">확인 필요</span>
+        </div>
+
+        <div class="obs-top">
+          <div>
+            <div class="ph big-ph">오늘 10:00 자동 촬영</div>
+            <div class="strip">
+              <div class="s"><div class="ph">9/15</div><span>9/15</span></div>
+              <div class="s"><div class="ph">9/16</div><span>9/16</span></div>
+              <div class="s"><div class="ph">9/17</div><span>9/17</span></div>
+              <div class="s"><div class="ph">9/18</div><span>9/18</span></div>
+              <div class="s"><div class="ph">9/19</div><span>9/19</span></div>
+              <div class="s"><div class="ph">9/20</div><span>9/20</span></div>
+              <div class="s"><div class="ph">9/21</div><span>오늘</span></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="now">
+              <div class="panel">
+                <p class="small">지금 온도</p>
+                <p class="gauge">24.1<small>°C</small></p>
+                <p class="range">적정 18~27°C · 정상</p>
+              </div>
+              <div class="panel">
+                <p class="small">지금 습도</p>
+                <p class="gauge" style="color:var(--clay)">31<small>%</small></p>
+                <p class="range bad">적정 50~60% · 건조</p>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+            <div class="panel">
+              <p class="h3">최근 7일</p>
+              <div style="height:8px"></div>
+              <svg class="chart" viewBox="0 0 400 150" preserveAspectRatio="none">
+                <rect x="0" y="45" width="400" height="30" fill="#E4EBE0"/>
+                <polyline points="0,55 57,58 114,62 171,80 228,96 285,102 342,104 400,106"
+                  fill="none" stroke="#2F5D3A" stroke-width="2.2" stroke-linejoin="round"/>
+                <polyline points="0,82 57,80 114,79 171,77 228,76 285,75 342,74 400,74"
+                  fill="none" stroke="#8A5A38" stroke-width="1.6" stroke-dasharray="4 3" stroke-linejoin="round"/>
+                <circle cx="400" cy="106" r="3.5" fill="#2F5D3A"/>
+              </svg>
+              <div class="legend">
+                <span><i style="background:#2F5D3A"></i>습도</span>
+                <span><i style="background:#8A5A38"></i>온도</span>
+                <span><i style="background:#E4EBE0;height:8px"></i>적정 습도</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:28px"></div>
+        <p class="h2">관찰일지</p>
+        <div style="height:4px"></div>
+        <p class="small">매일 오전 10시 사진과 하루 평균 온습도를 AI가 보고 씁니다.</p>
+
+        <div class="log">
+          <div class="log-item">
+            <div class="log-date">9월 21일<small>오늘</small></div>
+            <div class="ph">사진</div>
+            <div class="log-body">
+              <div class="envs">평균 24.0°C · 32%</div>
+              사흘째 습도가 적정보다 낮아요. 아래쪽 잎 두 장의 끝이 갈색으로 변하기 시작했습니다. 잎에 분무하거나 가습기 가까이로 옮겨 보세요.
+            </div>
+            <span class="chip warn">확인 필요</span>
+          </div>
+          <div class="log-item">
+            <div class="log-date">9월 20일<small>토요일</small></div>
+            <div class="ph">사진</div>
+            <div class="log-body">
+              <div class="envs">평균 24.3°C · 35%</div>
+              습도가 이틀 연속 떨어지고 있어요. 아직 잎에 눈에 띄는 변화는 없습니다.
+            </div>
+            <span class="chip warn">주의</span>
+          </div>
+          <div class="log-item">
+            <div class="log-date">9월 18일<small>목요일</small></div>
+            <div class="ph">사진</div>
+            <div class="log-body">
+              <div class="envs">평균 23.8°C · 52%</div>
+              새 줄기가 약 2cm 자랐어요. 온습도 모두 적정 범위입니다.
+            </div>
+            <span class="chip">좋음</span>
+          </div>
+        </div>
+
+        <div class="sub-actions">
+          <p class="small">더 알아보기 — 주 기능이 아니라 필요할 때만 여는 보조 기능</p>
+          <button class="btn quiet sm">직접 사진 찍어 진단하기</button>
+          <button class="btn quiet sm">관리 가이드</button>
+          <button class="btn quiet sm">물 줬어요 기록</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 식물 추가 -->
+    <section class="page hide" id="add">
+      <div class="inner">
+        <p class="h1">식물 추가</p>
+        <div style="height:4px"></div>
+        <p class="small">세 단계로 끝납니다. 판별은 이 흐름의 첫 단계입니다.</p>
+
+        <div class="stepper" id="stepper">
+          <div class="st done" data-s="s1"><b>1</b>사진으로 알아보기</div>
+          <div class="st on" data-s="s2"><b>2</b>등록</div>
+          <div class="st" data-s="s3"><b>3</b>기기 연결</div>
+        </div>
+
+        <div class="stp" id="s1">
+          <div class="two">
+            <div class="drop">
+              <p class="h3">식물 사진을 끌어다 놓거나 클릭</p>
+              <div style="height:6px"></div>
+              <p class="small">JPG, PNG, HEIC · 10MB 이하</p>
+              <div style="height:16px"></div>
+              <button class="btn">사진 고르기</button>
+            </div>
+            <div>
+              <p class="h3">왜 먼저 알아봐야 하나요</p>
+              <div style="height:6px"></div>
+              <p class="txt">기기가 재는 온도와 습도가 좋은지 나쁜지는 식물마다 다릅니다. 식물 종류를 알아야 "이 식물에게 적정한 범위"가 정해지고, 그 기준으로 매일의 관찰을 판단할 수 있어요.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stp on" id="s2">
+          <div class="two">
+            <div>
+              <div class="ph" style="height:200px">판별한 사진</div>
+              <div style="height:12px"></div>
+              <p class="small">이 사진과 가장 비슷해요</p>
+              <p class="h2">스킨답서스</p>
+              <p class="small" style="font-style:italic">Epipremnum aureum</p>
+            </div>
+            <div>
+              <div class="field">
+                <label>별명</label>
+                <div class="input">초록이</div>
+              </div>
+              <div class="field">
+                <label>두는 곳</label>
+                <div class="input">거실 안쪽 ▾</div>
+              </div>
+              <div style="height:6px"></div>
+              <div class="base">
+                <b>관찰 기준이 저장됩니다</b><br>
+                적정 온도 18~27°C · 적정 습도 50~60%<br>
+                기기가 잰 값이 이 범위를 벗어나면 관찰일지에 표시돼요.
+              </div>
+              <div style="height:18px"></div>
+              <button class="btn" data-s="s3">등록하고 기기 연결하기</button>
+              <div style="height:8px"></div>
+              <button class="btn quiet sm">기기 없이 등록만</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stp" id="s3">
+          <div class="two">
+            <div>
+              <p class="h3">라즈베리파이에 이 코드를 넣어주세요</p>
+              <div style="height:10px"></div>
+              <div class="token">pw_dev_7Kq2mX9vLp4RtY8nB3cF</div>
+              <div style="height:8px"></div>
+              <p class="small">이 화면을 벗어나면 다시 볼 수 없어요. 잃어버리면 새로 발급하면 됩니다.</p>
+            </div>
+            <div>
+              <p class="h3">연결 방법</p>
+              <div style="height:6px"></div>
+              <ol class="ol">
+                <li>라즈베리파이의 설정 파일을 엽니다</li>
+                <li>왼쪽 코드를 붙여넣고 저장합니다</li>
+                <li>카메라가 식물을 향하게 고정합니다</li>
+                <li>첫 기록이 들어오면 이 화면이 자동으로 바뀝니다</li>
+              </ol>
+              <div style="height:14px"></div>
+              <div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <span class="small">첫 기록을 기다리는 중…</span>
+                <span class="chip off">대기</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="foot">
+      <span>식물집사 · 캡스톤 디자인 2026</span>
+      <span>Next.js · Supabase · Gemini · Raspberry Pi</span>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>바뀐 점</h3>
+    <div class="ncols">
+      <div class="ncol">
+        <h4>주가 되는 것</h4>
+        <ul>
+          <li><b>오늘</b> — 내 식물들의 오늘 상태를 한눈에. 첫 화면입니다</li>
+          <li><b>관찰일지</b> — 날짜별 사진 + 온습도 + AI 코멘트. 이 프로젝트의 중심 화면</li>
+          <li><b>AI 관찰 코멘트</b> — 매일 사진과 온습도를 Gemini 에 보내 한두 문장으로 요약</li>
+          <li>상태는 세 단계로만: 좋음 / 주의 / 확인 필요</li>
+        </ul>
+      </div>
+      <div class="ncol">
+        <h4>자리를 옮긴 것</h4>
+        <ul>
+          <li><b>판별</b> → 식물 추가 1단계. 적정 온습도 기준을 정하는 용도</li>
+          <li><b>진단</b> → 관찰일지 아래 보조 버튼. 기기 없는 식물을 위해 남김</li>
+          <li><b>가이드</b> → 관찰일지 아래 보조 버튼</li>
+          <li><b>물 줬어요</b> → 보조 버튼. 관찰일지에 기록으로 함께 쌓임</li>
+          <li>코드는 지우지 않습니다. 메뉴에서만 뺍니다</li>
+        </ul>
+      </div>
+      <div class="ncol">
+        <h4>새로 만들 것</h4>
+        <ul>
+          <li>기기 API — 온습도, 사진 받기 (기기별 토큰)</li>
+          <li>매일 관찰 코멘트 생성 — 하루 1회, 오전 10시 사진 기준</li>
+          <li>오늘 / 관찰일지 화면</li>
+          <li>식물 추가 3단계 흐름 (기존 판별·등록을 이어 붙임)</li>
+          <li>라즈베리파이 파이썬 — 사진과 온습도를 보내기만</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const urls={home:"plant-web.vercel.app",obs:"plant-web.vercel.app/plants/2/journal",add:"plant-web.vercel.app/plants/new"};
+function show(v){
+  if(!urls[v]) return;
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hide",p.id!==v));
+  document.querySelectorAll(".vs").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  document.querySelectorAll("#menu a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));
+  document.getElementById("url").textContent=urls[v];
+}
+function step(s){
+  const order=["s1","s2","s3"], idx=order.indexOf(s);
+  document.querySelectorAll(".stp").forEach(p=>p.classList.toggle("on",p.id===s));
+  document.querySelectorAll(".st").forEach((t,i)=>{
+    t.classList.toggle("on",i===idx);
+    t.classList.toggle("done",i<idx);
+  });
+}
+document.addEventListener("click",e=>{
+  const s=e.target.closest("[data-s]"); if(s){step(s.dataset.s);return;}
+  const v=e.target.closest("[data-v]"); if(v) show(v.dataset.v);
+});
+</script>
+</body>
+</html>
