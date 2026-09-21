@@ -18,9 +18,19 @@ create policy "public read plant photos" on storage.objects
 -- 토큰을 검증해서 꺼낸다. 서비스 롤은 RLS 를 우회하므로 아래 정책이 없어도
 -- 앱은 돌아간다. 그래도 켜 두면 anon 키가 새더라도 남의 데이터를 못 만진다.
 
-alter table plants    enable row level security;
-alter table care_logs enable row level security;
-alter table diagnoses enable row level security;
+-- 새 프로젝트라면 migration-identifications.sql 도 함께 실행한다.
+-- identifications 테이블과 plants 의 종 정보 컬럼이 거기에 있다.
+
+alter table plants          enable row level security;
+alter table care_logs       enable row level security;
+alter table diagnoses       enable row level security;
+alter table identifications enable row level security;
+
+drop policy if exists "own identifications" on identifications;
+create policy "own identifications" on identifications
+  for all to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 drop policy if exists "own plants" on plants;
 create policy "own plants" on plants

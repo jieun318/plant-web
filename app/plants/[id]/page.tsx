@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import InfoRow from "@/components/ui/InfoRow";
 import Loading from "@/components/ui/Loading";
 import Panel from "@/components/ui/Panel";
 import PhotoFrame from "@/components/ui/PhotoFrame";
@@ -129,6 +130,9 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
                 {waterPhrase(daysUntilWater(plant))}
               </p>
             </Panel>
+
+            {/* 등록할 때 복사해 둔 종 정보. 판별 기록이 지워져도 남는다. */}
+            <SpeciesPanel plant={plant} />
           </div>
 
           {/* 오른쪽: 무엇을 할 수 있는지와 지금까지의 기록 */}
@@ -173,6 +177,37 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
         </div>
       )}
     </PageShell>
+  );
+}
+
+function SpeciesPanel({ plant }: { plant: Plant }) {
+  // 예전에 등록한 식물에는 종 정보가 없다. 있는 줄만 보여준다.
+  const rows = (
+    [
+      ["학명", plant.scientific_name],
+      ["난이도", plant.difficulty],
+      ["원산지", plant.origin],
+      ["빛", plant.light],
+      ["물", plant.water],
+      ["습도", plant.humidity],
+      ["분갈이", plant.repot],
+    ] as const
+  ).filter(([, value]) => Boolean(value));
+
+  if (rows.length === 0) return null;
+
+  return (
+    <Panel title={plant.species}>
+      <dl>
+        {rows.map(([label, value]) => (
+          <InfoRow
+            key={label}
+            label={label}
+            value={label === "학명" ? <span className="italic">{value}</span> : value}
+          />
+        ))}
+      </dl>
+    </Panel>
   );
 }
 

@@ -13,7 +13,28 @@ export type IdentifyResult = {
   note: string;              // 특징 한 줄
 };
 
+// DB: identifications 테이블
+// 판별 결과를 브라우저가 아니라 DB 에 남긴다. 사용자당 최근 10건만 유지한다.
+export type Identification = {
+  id: string;
+  user_id: string;
+  photo_url: string | null;
+  korean_name: string;
+  scientific_name: string | null;
+  difficulty: string | null;
+  origin: string | null;
+  light: string | null;
+  water: string | null;
+  humidity: string | null;
+  repot: string | null;
+  water_interval_days: number | null;
+  confident: boolean;
+  created_at: string;
+};
+
 // DB: plants 테이블
+// 종 정보는 등록할 때 판별 결과에서 복사한다.
+// 참조가 아니라 값이라 판별 기록이 지워져도 상세 화면은 그대로 보인다.
 export type Plant = {
   id: string;
   user_id: string;
@@ -24,6 +45,14 @@ export type Plant = {
   water_interval: number;
   last_watered: string | null;
   created_at: string;
+  identification_id: string | null;
+  scientific_name: string | null;
+  difficulty: string | null;
+  origin: string | null;
+  light: string | null;
+  water: string | null;
+  humidity: string | null;
+  repot: string | null;
 };
 
 // DB: care_logs 테이블

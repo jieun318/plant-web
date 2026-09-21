@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { buttonClass } from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
+import { apiFetch } from "@/lib/api";
 import { saveIdentify } from "@/lib/handoff";
 import { fileToDataUrl, resizeImage } from "@/lib/image";
 import type { IdentifyResult } from "@/types";
@@ -13,6 +14,22 @@ type Props = {
   /** dropzone: 홈의 큰 영역 / button: 빈 목록처럼 자리가 좁을 때 */
   variant?: "dropzone" | "button";
 };
+
+/**
+ * 판별을 요청한다.
+ *
+ * 토큰을 붙여 보내야 결과가 DB 에 남는다.
+ * 세션을 못 만들었더라도 판별 자체는 막지 않는다. 그때는 기록이 남지 않는다.
+ */
+async function identify(form: FormData): Promise<Response> {
+  const init: RequestInit = { method: "POST", body: form };
+
+  try {
+    return await apiFetch("/api/identify", init);
+  } catch {
+    return fetch("/api/identify", init);
+  }
+}
 
 export default function PhotoUpload({ variant = "dropzone" }: Props) {
   const router = useRouter();
@@ -38,7 +55,7 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
       const form = new FormData();
       form.append("photo", resized);
 
-      const res = await fetch("/api/identify", { method: "POST", body: form });
+      const res = await identify(form);
       const data = await res.json();
 
       if (!res.ok) {
@@ -46,6 +63,15 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
         return;
       }
 
+      const { id } = data as { id: string | null };
+
+      // 기록이 남았으면 주소로 넘긴다. 새로고침해도 결과가 그대로 있다.
+      if (id) {
+        router.push(`/result?id=${id}`);
+        return;
+      }
+
+      // 판별에 실패했거나 세션이 없어 남기지 못한 경우. 브라우저에 담아 넘긴다.
       saveIdentify({ result: data as IdentifyResult, photo });
       router.push("/result");
     } catch {
