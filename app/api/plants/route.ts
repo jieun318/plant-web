@@ -133,6 +133,19 @@ export async function POST(req: NextRequest) {
 
     const { identificationId, result, photo }: CreateBody = await req.json();
 
+    // 등록 후 뒤로 가서 다시 누르면 같은 식물이 두 개 생긴다. 이미 있으면 그걸 준다.
+    if (identificationId) {
+      const { data: existing } = await supabaseServer
+        .from("plants")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("identification_id", identificationId)
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) return NextResponse.json(existing);
+    }
+
     const row = identificationId
       ? await fromIdentification(userId, identificationId)
       : result

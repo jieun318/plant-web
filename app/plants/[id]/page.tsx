@@ -98,7 +98,10 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
 
       setConfirmDays(null);
       setPlant(data.plant);
-      if (data.log) setLogs((prev) => [data.log, ...prev]);
+      const log = data.log as CareLog | null;
+      if (log) {
+        setLogs((prev) => (prev.some((l) => l.id === log.id) ? prev : [log, ...prev]));
+      }
     } catch {
       setError("기록에 실패했습니다. 연결을 확인해 주세요.");
     } finally {

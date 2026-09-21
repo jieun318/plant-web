@@ -12,6 +12,7 @@ import { apiFetch } from "@/lib/api";
 import {
   getDiagnosisServerSnapshot,
   getDiagnosisSnapshot,
+  markDiagnosisSaved,
   subscribeIdentify,
 } from "@/lib/handoff";
 
@@ -29,7 +30,7 @@ export default function DiagnosisResultPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
-    if (!handoff || saving) return;
+    if (!handoff || handoff.saved || saving) return;
 
     setSaving(true);
     setError(null);
@@ -50,6 +51,7 @@ export default function DiagnosisResultPage() {
         return;
       }
 
+      markDiagnosisSaved();
       router.push(`/plants/${handoff.plantId}`);
     } catch {
       setError("저장에 실패했습니다. 연결을 확인해 주세요.");
@@ -136,9 +138,15 @@ export default function DiagnosisResultPage() {
 
       {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
 
-      <Button onClick={save} disabled={saving} full className="mt-8">
-        {saving ? "저장 중..." : "기록에 저장"}
-      </Button>
+      {handoff.saved ? (
+        <Button href={`/plants/${handoff.plantId}`} variant="ghost" full className="mt-8">
+          저장했어요 · 식물로 돌아가기
+        </Button>
+      ) : (
+        <Button onClick={save} disabled={saving} full className="mt-8">
+          {saving ? "저장 중..." : "기록에 저장"}
+        </Button>
+      )}
 
       <p className="mt-6 border-l-2 border-rule pl-3 text-xs leading-relaxed text-ink-45">
         참고용 안내입니다. 상태가 심하면 가까운 화훼농원에 문의하세요.

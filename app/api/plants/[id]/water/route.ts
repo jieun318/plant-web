@@ -66,10 +66,11 @@ export async function POST(
 
   const logs = await waterLogs(id);
 
-  // (1) 오늘 이미 줬다. 아무것도 쓰지 않고 지금 상태만 알려준다.
+  // (1) 오늘 이미 줬다. 아무것도 쓰지 않고 오늘 기록을 돌려준다.
+  // 다른 탭에서 먼저 눌렀을 수 있으니 화면이 그 기록을 모르면 채워 넣게 한다.
   const today = todaysWaterLog(logs);
   if (today) {
-    return NextResponse.json({ plant, log: null, already: true });
+    return NextResponse.json({ plant, log: today, already: true });
   }
 
   // (2) 아직 줄 때가 아니다. 사용자가 확인하기 전에는 쓰지 않는다.

@@ -70,6 +70,8 @@ export type DiagnosisHandoff = {
   result: DiagnosisResult;
   answers: DiagnosisAnswer[];
   photoUrl: string | null;
+  /** 기록에 저장했는지. 뒤로 와서 한 번 더 저장하지 않게 막는다. */
+  saved?: boolean;
 };
 
 export function saveDiagnosis(handoff: DiagnosisHandoff) {
@@ -78,6 +80,12 @@ export function saveDiagnosis(handoff: DiagnosisHandoff) {
   } catch {
     // 저장이 막혀도 진단 자체는 끝났으므로 이동은 막지 않는다
   }
+}
+
+/** 저장을 마쳤다고 표시한다. 결과는 남겨 두어 뒤로 와도 내용은 보인다. */
+export function markDiagnosisSaved() {
+  const current = getDiagnosisSnapshot();
+  if (current) saveDiagnosis({ ...current, saved: true });
 }
 
 let diagnosisRaw: string | null = null;

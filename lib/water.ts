@@ -44,11 +44,14 @@ export function todaysWaterLog(logs: CareLog[]): CareLog | undefined {
   );
 }
 
-/** 시각을 버리고 날짜만 남긴다. "몇 밀리초 뒤"가 아니라 "며칠 뒤"를 세기 위함. */
+// 날짜 경계는 한국 시간으로 고정한다.
+// 서버(UTC)와 브라우저(KST)가 "오늘"을 다르게 보면 새벽에 물 준 기록이 어제로 잡힌다.
+const KST_OFFSET = 9 * 60 * 60 * 1000;
+
+/** 시각을 버리고 날짜(한국 시간 자정)만 남긴다. "몇 밀리초 뒤"가 아니라 "며칠 뒤"를 세기 위함. */
 function atMidnight(value: string | Date): Date {
-  const d = new Date(value);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const shifted = new Date(value).getTime() + KST_OFFSET;
+  return new Date(shifted - (shifted % DAY) - KST_OFFSET);
 }
 
 /** 다음 물주기 예정일. 한 번도 안 줬으면 등록일을 기준으로 잡는다. */
