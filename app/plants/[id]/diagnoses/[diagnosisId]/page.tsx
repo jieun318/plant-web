@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
-import Badge from "@/components/ui/Badge";
+import ReasonList from "@/components/ReasonList";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
 import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
+import StatusText from "@/components/ui/StatusText";
 import StepList from "@/components/ui/StepList";
 import { apiFetch } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import type { Diagnosis, Plant } from "@/types";
 
 type Loaded = {
@@ -59,12 +60,8 @@ export default function PastDiagnosisPage({
 
   return (
     <PageShell className="max-w-2xl">
-      <Link
-        href={`/plants/${id}`}
-        className="-ml-1 inline-flex items-center gap-0.5 text-sm text-ink-70 transition-colors hover:text-ink"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        {data ? data.plant.nickname || data.plant.species : "돌아가기"}
+      <Link href={`/plants/${id}`} className="text-sm text-soft transition-colors hover:text-ink">
+        ← {data ? data.plant.nickname || data.plant.species : "돌아가기"}
       </Link>
 
       {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
@@ -72,51 +69,28 @@ export default function PastDiagnosisPage({
 
       {diagnosis && (
         <>
-          <p className="mt-6 text-xs text-ink-45">{formatDate(diagnosis.created_at)} 진단</p>
-
-          <Badge tone="clay" className="mt-2">
-            {diagnosis.cause}
-          </Badge>
-
           {/* 제목은 migration-diagnosis-title.sql 이후에 저장한 진단에만 있다 */}
-          <SectionTitle as="h1" className="mt-3">
+          <SectionTitle as="h1" className="mt-6">
             {diagnosis.title || "지난 진단 결과"}
           </SectionTitle>
+          <p className="mt-2 flex flex-wrap items-baseline gap-x-3">
+            <StatusText>{diagnosis.cause}</StatusText>
+            <span className="font-mono text-xs text-soft">{formatDate(diagnosis.created_at)} 진단</span>
+          </p>
 
           <Panel title="이렇게 판단했어요" className="mt-9">
-            <ul className="flex flex-col gap-2">
-              {diagnosis.reasons.map((reason) => (
-                <li
-                  key={reason}
-                  className="flex gap-2 text-sm leading-relaxed text-ink-70"
-                >
-                  <span aria-hidden className="text-ink-45">
-                    ·
-                  </span>
-                  <span>{reason}</span>
-                </li>
-              ))}
-            </ul>
+            <ReasonList reasons={diagnosis.reasons} />
           </Panel>
 
-          <Panel title="그때 권한 할 일" className="mt-5">
+          <Panel title="그때 권한 할 일" className="mt-9">
             <StepList steps={diagnosis.actions} />
           </Panel>
 
-          <p className="mt-6 border-l-2 border-rule pl-3 text-xs leading-relaxed text-ink-45">
+          <p className="mt-9 text-xs leading-relaxed text-soft">
             참고용 안내입니다. 지금 상태가 달라졌다면 다시 진단해 보세요.
           </p>
         </>
       )}
     </PageShell>
   );
-}
-
-/** 2026년 9월 21일 — 지난 기록이라 연도까지 적는다. */
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }

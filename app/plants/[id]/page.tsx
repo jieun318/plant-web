@@ -3,20 +3,22 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
 import Button from "@/components/ui/Button";
+import Caption from "@/components/ui/Caption";
+import DataTable, { type DataRow } from "@/components/ui/DataTable";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import InfoRow from "@/components/ui/InfoRow";
 import Loading from "@/components/ui/Loading";
-import Panel from "@/components/ui/Panel";
 import PhotoFrame from "@/components/ui/PhotoFrame";
-import SectionTitle from "@/components/ui/SectionTitle";
-import Timeline, { type TimelineItem } from "@/components/ui/Timeline";
+import SectionHeader from "@/components/ui/SectionHeader";
+import SpecimenLabel, { type SpecimenField } from "@/components/ui/SpecimenLabel";
+import StatusText from "@/components/ui/StatusText";
 import { apiFetch } from "@/lib/api";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { wasPlantDeleted } from "@/lib/handoff";
 import {
   EARLY_WARN_COUNT,
+  EARLY_WINDOW_DAYS,
   countEarlyWaterings,
   daysSinceRegistered,
   daysUntilWater,
@@ -146,206 +148,173 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
   const visible = expanded ? logs : logs.slice(0, VISIBLE_LOGS);
   const hidden = logs.length - visible.length;
 
-  // 같은 날 여러 건이 쌓이므로 시각까지 적는다
-  const items: TimelineItem[] = visible.map((log) => ({
-    id: log.id,
-    date: formatDateTime(log.created_at),
-    text: log.memo || LOG_TEXT[log.type],
-    // 진단 기록은 눌러서 그때 결과를 다시 본다
-    href: log.diagnosis_id ? `/plants/${id}/diagnoses/${log.diagnosis_id}` : undefined,
-  }));
+  // 같은 날 여러 건이 쌓이므로 시각까지 적는다. 진단 기록은 눌러서 그때 결과를 다시 본다.
+  const rows: DataRow[] = visible.map((log) => {
+    const text = log.memo || LOG_TEXT[log.type];
+
+    return {
+      key: log.id,
+      cells: [
+        formatDateTime(log.created_at),
+        log.diagnosis_id ? (
+          <Button variant="link" href={`/plants/${id}/diagnoses/${log.diagnosis_id}`}>
+            {text}
+          </Button>
+        ) : (
+          text
+        ),
+      ],
+    };
+  });
 
   const wateredToday = Boolean(todaysWaterLog(logs));
-  const tooOften = countEarlyWaterings(logs) >= EARLY_WARN_COUNT;
+  const earlyCount = countEarlyWaterings(logs);
+  // 이른 물주기가 쌓였다. 과습은 이 서비스가 막으려는 문제다.
+  const tooOften = earlyCount >= EARLY_WARN_COUNT;
 
   return (
     <PageShell>
-      <Link
-        href="/plants"
-        className="-ml-1 inline-flex items-center gap-0.5 text-sm text-ink-70 transition-colors hover:text-ink"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        내 식물
+      <Link href="/plants" className="text-sm text-soft transition-colors hover:text-ink">
+        ← 내 식물
       </Link>
 
       {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
       {!plant && !error && <Loading className="mt-10" />}
 
-      {/* 이른 물주기가 쌓였다. 과습은 이 서비스가 막으려는 문제다. */}
-      {plant && tooOften && (
-        <Panel className="mt-6">
-          <p className="text-sm leading-relaxed text-clay">
-            최근 물을 자주 주고 있어요. 과습이 의심되면 진단해 보세요.
-          </p>
-          <Button
-            href={`/diagnose?plantId=${plant.id}`}
-            variant="link"
-            size="sm"
-            className="mt-3"
-          >
-            진단해 보기
-          </Button>
-        </Panel>
-      )}
-
       {plant && (
-        <div className="mt-6 grid items-start gap-8 md:grid-cols-2 md:gap-12">
-          {/* 왼쪽: 지금 이 식물이 어떤 상태인지 */}
-          <div className="flex flex-col gap-6">
-            <PhotoFrame src={plant.photo_url} ratio="video" />
-
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <SectionTitle as="h1">
-                  {plant.nickname || plant.species}
-                </SectionTitle>
-                <p className="mt-1 text-xs text-ink-45">
-                  {[plant.location, `${daysSinceRegistered(plant)}일째 함께`]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              </div>
-              <Button
-                href={`/plants/${plant.id}/edit`}
-                variant="link"
-                size="sm"
-                className="shrink-0"
-              >
-                수정
-              </Button>
+        <>
+          <div className="mt-6 grid items-start gap-7 md:grid-cols-[1.3fr_0.7fr]">
+            <div className="min-w-0">
+              <PhotoFrame src={plant.photo_url} ratio="photo" />
+              <Caption
+                left={`${formatDate(plant.created_at)} 등록`}
+                right={`물주기 ${plant.water_interval}일 간격`}
+              />
             </div>
 
-            <Panel className="text-center">
-              <p className="text-xs text-ink-45">다음 물주기</p>
-              <p className="mt-1 font-serif text-3xl font-bold tracking-tight text-leaf">
-                {waterPhrase(daysUntilWater(plant))}
-              </p>
-            </Panel>
-
-            {/* 등록할 때 복사해 둔 종 정보. 판별 기록이 지워져도 남는다. */}
-            <SpeciesPanel plant={plant} />
+            <SpecimenLabel
+              heading="관찰 기록"
+              name={plant.nickname || plant.species}
+              scientificName={plant.scientific_name}
+              fields={specimenFields(plant)}
+              status={tooOften ? "물을 자주 주고 있어요" : undefined}
+              note={
+                tooOften
+                  ? `최근 ${EARLY_WINDOW_DAYS}일 동안 예정보다 이른 물주기가 ${earlyCount}번 있었어요. 과습이 의심되면 진단해 보세요.`
+                  : undefined
+              }
+              footer={
+                <Button variant="link" size="sm" href={`/plants/${plant.id}/edit`}>
+                  수정
+                </Button>
+              }
+            />
           </div>
 
-          {/* 오른쪽: 무엇을 할 수 있는지와 지금까지의 기록 */}
-          <div className="flex flex-col gap-6">
-            <Panel title="관리">
-              <div className="flex flex-col gap-2">
-                {wateredToday ? (
-                  <>
-                    <Button disabled full>
-                      오늘 물 줬어요 ✓
-                    </Button>
-                    <p className="text-center text-xs text-ink-45">
-                      다음 물주기는 {waterPhrase(daysUntilWater(plant))}예요
-                    </p>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={cancelWater}
-                      disabled={watering}
-                    >
+          <section className="mt-[34px] max-w-md">
+            <SectionHeader
+              title="물주기"
+              aside={<span className="font-mono">다음 {waterPhrase(daysUntilWater(plant))}</span>}
+            />
+            <div className="mt-4 flex flex-col gap-3">
+              {wateredToday ? (
+                <>
+                  <Button disabled full>
+                    오늘 물 줬어요
+                  </Button>
+                  <p className="text-xs text-soft">
+                    다음 물주기는 {waterPhrase(daysUntilWater(plant))}예요 ·{" "}
+                    <Button variant="link" size="sm" onClick={cancelWater} disabled={watering}>
                       기록 취소
                     </Button>
-                  </>
-                ) : confirmDays !== null ? (
-                  <>
-                    <p className="text-sm leading-relaxed text-clay">
-                      아직 물 줄 때가 아니에요. 지금 주면 과습으로 뿌리가 상할 수
-                      있습니다. 흙이 정말 말랐나요?
-                    </p>
-                    <Button onClick={() => water(true)} disabled={watering} full>
-                      {watering ? "기록 중..." : "흙이 말랐어요, 기록할게요"}
-                    </Button>
-                    <Button
-                      variant="link"
-                      onClick={() => setConfirmDays(null)}
-                      disabled={watering}
-                      full
-                    >
-                      취소
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={() => water()} disabled={watering} full>
-                    {watering ? "기록 중..." : "물 줬어요"}
-                  </Button>
-                )}
-                <Button href={`/diagnose?plantId=${plant.id}`} variant="link" full>
-                  잎이 이상해요 · 진단하기
-                </Button>
-                <Button href={`/plants/${plant.id}/guide`} variant="link" full>
-                  관리 가이드 보기
-                </Button>
-              </div>
-            </Panel>
-
-            <Panel title="기록">
-              {logs.length === 0 ? (
-                <p className="text-sm text-ink-45">
-                  아직 기록이 없어요. 물을 주면 여기에 쌓입니다.
-                </p>
-              ) : (
-                <>
-                  <Timeline items={items} />
-                  {hidden > 0 && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      full
-                      className="mt-4"
-                      onClick={() => setExpanded(true)}
-                    >
-                      기록 {hidden}건 더 보기
-                    </Button>
-                  )}
+                  </p>
                 </>
+              ) : confirmDays !== null ? (
+                <>
+                  <p className="text-sm leading-relaxed text-alert">
+                    아직 물 줄 때가 아니에요. 지금 주면 과습으로 뿌리가 상할 수
+                    있습니다. 흙이 정말 말랐나요?
+                  </p>
+                  <Button onClick={() => water(true)} disabled={watering} full>
+                    {watering ? "기록 중..." : "흙이 말랐어요, 기록할게요"}
+                  </Button>
+                  <Button
+                    variant="link"
+                    onClick={() => setConfirmDays(null)}
+                    disabled={watering}
+                    className="self-start"
+                  >
+                    취소
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => water()} disabled={watering} full>
+                  {watering ? "기록 중..." : "물 줬어요"}
+                </Button>
               )}
-            </Panel>
+            </div>
+          </section>
+
+          <section className="mt-[34px]">
+            <SectionHeader
+              title="기록"
+              aside={<span className="font-mono">{logs.length}건</span>}
+            />
+            {logs.length === 0 ? (
+              <p className="py-4 text-sm text-soft">
+                아직 기록이 없어요. 물을 주면 여기에 쌓입니다.
+              </p>
+            ) : (
+              <DataTable
+                columns={[{ label: "날짜", nowrap: true }, { label: "기록" }]}
+                rows={rows}
+              />
+            )}
+            {hidden > 0 && (
+              <Button variant="link" size="sm" className="mt-4" onClick={() => setExpanded(true)}>
+                기록 {hidden}건 더 보기
+              </Button>
+            )}
+          </section>
+
+          <div className="mt-[26px] flex flex-wrap items-baseline gap-x-[26px] gap-y-2 text-[13px]">
+            <span className="text-soft">필요할 때만</span>
+            <Button variant="link" href={`/diagnose?plantId=${plant.id}`}>
+              직접 사진 찍어 진단하기
+            </Button>
+            <Button variant="link" href={`/plants/${plant.id}/guide`}>
+              관리 가이드
+            </Button>
           </div>
-        </div>
+        </>
       )}
     </PageShell>
   );
 }
 
-function SpeciesPanel({ plant }: { plant: Plant }) {
-  // 예전에 등록한 식물에는 종 정보가 없다. 있는 줄만 보여준다.
-  const rows = (
-    [
-      ["학명", plant.scientific_name],
-      ["난이도", plant.difficulty],
-      ["원산지", plant.origin],
-      ["빛", plant.light],
-      ["물", plant.water],
-      ["습도", plant.humidity],
-      ["분갈이", plant.repot],
-    ] as const
-  ).filter(([, value]) => Boolean(value));
+/** 표본 라벨의 필드. 등록할 때 복사해 둔 종 정보 중 값이 있는 것만. */
+function specimenFields(plant: Plant): SpecimenField[] {
+  const days = daysUntilWater(plant);
 
-  if (rows.length === 0) return null;
+  const fields: (SpecimenField | null)[] = [
+    plant.location ? { label: "두는 곳", value: plant.location } : null,
+    {
+      label: "관찰 시작",
+      value: `${formatDate(plant.created_at)} · ${daysSinceRegistered(plant)}일째`,
+      mono: true,
+    },
+    {
+      label: "다음 물주기",
+      // 지났거나 오늘이면 문제다. 그때만 alert
+      value: days <= 0 ? <StatusText className="text-[12.5px]">{waterPhrase(days)}</StatusText> : waterPhrase(days),
+      mono: true,
+    },
+    plant.difficulty ? { label: "난이도", value: plant.difficulty } : null,
+    plant.light ? { label: "빛", value: plant.light } : null,
+    plant.water ? { label: "물", value: plant.water } : null,
+    plant.humidity ? { label: "습도", value: plant.humidity } : null,
+    plant.repot ? { label: "분갈이", value: plant.repot } : null,
+  ];
 
-  return (
-    <Panel title={plant.species}>
-      <dl>
-        {rows.map(([label, value]) => (
-          <InfoRow
-            key={label}
-            label={label}
-            value={label === "학명" ? <span className="italic">{value}</span> : value}
-          />
-        ))}
-      </dl>
-    </Panel>
-  );
-}
-
-/** 9월 16일 14:20 — 같은 날 여러 건을 구분해야 해서 시각까지 적는다. */
-function formatDateTime(value: string) {
-  return new Date(value).toLocaleString("ko-KR", {
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  return fields.filter((field): field is SpecimenField => field !== null);
 }

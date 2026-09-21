@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState, type FormEvent } from "react";
-import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -107,12 +106,8 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
 
   return (
     <PageShell className="max-w-2xl">
-      <Link
-        href={`/plants/${id}`}
-        className="-ml-1 inline-flex items-center gap-0.5 text-sm text-ink-70 transition-colors hover:text-ink"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        돌아가기
+      <Link href={`/plants/${id}`} className="text-sm text-soft transition-colors hover:text-ink">
+        ← 돌아가기
       </Link>
 
       <SectionTitle as="h1" className="mt-6">
@@ -124,7 +119,7 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
 
       {plant && (
         <>
-          <form onSubmit={save} className="mt-8 flex flex-col gap-5">
+          <form onSubmit={save} className="mt-8 flex flex-col gap-9">
             <Panel title="별명">
               <input
                 value={nickname}
@@ -132,15 +127,15 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
                 maxLength={NICKNAME_MAX}
                 placeholder={plant.species}
                 aria-label="별명"
-                className="w-full rounded-md border border-rule bg-sheet px-3.5 py-3 text-sm text-ink placeholder:text-ink-45 focus:border-leaf focus:outline-none"
+                className="w-full border-0 border-b border-ink bg-transparent px-0 py-2 text-sm text-ink placeholder:text-faint focus:outline-none"
               />
-              <p className="mt-2 text-xs text-ink-45">
+              <p className="mt-2 text-xs text-soft">
                 비워두면 종 이름({plant.species})으로 보여요.
               </p>
             </Panel>
 
             <Panel title="두는 곳">
-              <div role="radiogroup" aria-label="두는 곳" className="flex flex-wrap gap-2">
+              <div role="radiogroup" aria-label="두는 곳" className="flex flex-wrap gap-x-5 gap-y-2.5">
                 {[...LOCATIONS, OTHER].map((option) => {
                   const selected = choice === option;
 
@@ -152,10 +147,10 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
                       aria-checked={selected}
                       // 고른 것을 다시 누르면 선택을 푼다. 두는 곳은 비워둘 수 있다.
                       onClick={() => setChoice(selected ? null : option)}
-                      className={`rounded-md border px-3.5 py-2 text-sm transition-colors ${
+                      className={`text-sm transition-colors ${
                         selected
-                          ? "border-leaf bg-leaf-50 font-medium text-leaf"
-                          : "border-rule bg-sheet text-ink-70 hover:border-wood hover:text-ink"
+                          ? "font-semibold text-ink underline decoration-1 underline-offset-[6px]"
+                          : "text-soft hover:text-ink"
                       }`}
                     >
                       {option}
@@ -172,12 +167,12 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
                   placeholder="예: 사무실 책상"
                   aria-label="두는 곳 직접 입력"
                   autoFocus
-                  className="mt-3 w-full rounded-md border border-rule bg-sheet px-3.5 py-3 text-sm text-ink placeholder:text-ink-45 focus:border-leaf focus:outline-none"
+                  className="mt-3 w-full border-0 border-b border-ink bg-transparent px-0 py-2 text-sm text-ink placeholder:text-faint focus:outline-none"
                 />
               )}
 
               {locationChanged && (
-                <p className="mt-3 text-xs leading-relaxed text-ink-45">
+                <p className="mt-3 text-xs leading-relaxed text-soft">
                   두는 곳이 바뀌면 관리 가이드를 새 자리에 맞춰 다시 만들어요.
                 </p>
               )}
@@ -234,18 +229,17 @@ function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
     <Panel title="식물 삭제" className="mt-10">
       {confirming ? (
         <>
-          <p className="text-sm leading-relaxed text-clay">
+          <p className="text-sm leading-relaxed text-alert">
             {name}을(를) 삭제할까요? 물주기·진단 기록과 사진이 모두 지워지고 되돌릴 수
             없어요.
           </p>
           {error && <ErrorMessage className="mt-3">{error}</ErrorMessage>}
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-4 flex items-center gap-6">
             <Button
               type="button"
               variant="danger"
               onClick={remove}
               disabled={deleting}
-              className="sm:flex-1"
             >
               {deleting ? "삭제 중..." : "삭제"}
             </Button>
@@ -254,7 +248,6 @@ function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
               variant="link"
               onClick={() => setConfirming(false)}
               disabled={deleting}
-              className="sm:flex-1"
             >
               취소
             </Button>
@@ -262,7 +255,7 @@ function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
         </>
       ) : (
         <>
-          <p className="text-sm leading-relaxed text-ink-70">
+          <p className="text-sm leading-relaxed text-soft">
             기록과 사진까지 모두 지워집니다.
           </p>
           <Button

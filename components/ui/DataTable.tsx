@@ -27,6 +27,17 @@ function isCell(cell: ReactNode | DataCell): cell is DataCell {
   );
 }
 
+/**
+ * 열 종류별 여백과 정렬. 한 칸에 pr-2.5 와 pr-6 이 같이 붙으면 CSS 순서에 따라
+ * 결과가 달라지므로 여기서 하나만 고른다.
+ */
+function cellLayout(col: DataColumn | undefined): string {
+  if (col?.numeric) return "pr-2.5 text-right whitespace-nowrap md:pr-[22px]";
+  // 날짜 열은 내용만큼만 차지한다
+  if (col?.nowrap) return "w-px pr-6 whitespace-nowrap";
+  return "pr-2.5";
+}
+
 type Props = {
   columns: DataColumn[];
   rows: DataRow[];
@@ -45,8 +56,11 @@ export default function DataTable({ columns, rows, className }: Props) {
                 scope="col"
                 className={[
                   "border-b border-hair pt-2.5 pb-2 text-[10.5px] font-medium tracking-[0.04em] text-soft",
-                  col.numeric ? "pr-2.5 text-right whitespace-nowrap md:pr-[22px]" : "pr-2.5 text-left",
-                ].join(" ")}
+                  cellLayout(col),
+                  !col.numeric && "text-left",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 {col.label}
               </th>
@@ -65,10 +79,8 @@ export default function DataTable({ columns, rows, className }: Props) {
                     key={col?.label ?? i}
                     className={[
                       "border-b border-hair py-[13px] align-top text-[13px] leading-[1.7]",
-                      col?.numeric
-                        ? "pr-2.5 text-right font-mono whitespace-nowrap md:pr-[22px]"
-                        : "pr-2.5",
-                      col?.nowrap && "font-mono whitespace-nowrap",
+                      cellLayout(col),
+                      (col?.numeric || col?.nowrap) && "font-mono",
                       alert ? "text-alert" : "text-ink",
                     ]
                       .filter(Boolean)
