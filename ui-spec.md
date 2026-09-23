@@ -106,6 +106,7 @@ Tailwind 에 연결한다. Tailwind v4 라 `tailwind.config` 파일은 없다.
 |---|---|
 | `PlantCard` | 사진 + `Caption` + 이름 + 부제 + 우측 보조 텍스트(`aside`). 박스 없음 |
 | `PhotoUpload` | 드롭존(점선 `border-hair`) / 버튼 두 모양. 판별 요청까지 한다 |
+| `ReasonList` | 진단 판단 근거 줄 목록. 진단 결과와 지난 진단이 같이 쓴다 |
 
 `components/ui/` — primitive
 
