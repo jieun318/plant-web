@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import PageShell from "@/components/layout/PageShell";
 import PhotoUpload from "@/components/PhotoUpload";
 import PlantCard from "@/components/PlantCard";
-import Badge from "@/components/ui/Badge";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
@@ -48,7 +47,7 @@ export default function GuideIndexPage() {
   return (
     <PageShell>
       <SectionTitle as="h1">관리 가이드</SectionTitle>
-      <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-70">
+      <p className="mt-2 max-w-xl text-sm leading-relaxed text-soft">
         같은 종이라도 두는 자리와 키운 기간에 따라 답이 달라집니다. 등록한 식물을
         고르면 그 환경에 맞춘 가이드를 보여드립니다.
       </p>
@@ -67,13 +66,13 @@ export default function GuideIndexPage() {
       )}
 
       {plants && plants.length > 0 && (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
           {plants.map((plant) => (
             <PlantCard
               key={plant.id}
               plant={plant}
               href={`/plants/${plant.id}/guide`}
-              aside={<Badge tone="leaf">가이드 보기</Badge>}
+              aside={<span className="shrink-0 text-xs text-soft">가이드 보기</span>}
             />
           ))}
         </div>

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -95,18 +94,14 @@ export default function PlantGuidePage({
 
   return (
     <PageShell className="max-w-3xl">
-      <Link
-        href={`/plants/${id}`}
-        className="-ml-1 inline-flex items-center gap-0.5 text-sm text-ink-70 transition-colors hover:text-ink"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        돌아가기
+      <Link href={`/plants/${id}`} className="text-sm text-soft transition-colors hover:text-ink">
+        ← 돌아가기
       </Link>
 
       <SectionTitle as="h1" className="mt-6">
         {plant ? `${plant.species} 관리법` : "관리법"}
       </SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-ink-70">
+      <p className="mt-2 text-sm leading-relaxed text-soft">
         {[plant?.location, plant?.nickname]
           .filter(Boolean)
           .join(" · ") || "두는 자리와 키운 기간에 맞춰 만든 안내입니다."}
@@ -144,7 +139,7 @@ export default function PlantGuidePage({
       )}
 
       {guide && (
-        <div className="mt-6 flex flex-col gap-5">
+        <div className="mt-8 flex flex-col gap-9">
           <Panel title="언제 하나요">
             <p className="text-sm leading-relaxed text-ink">{guide.when_to}</p>
           </Panel>
@@ -154,7 +149,7 @@ export default function PlantGuidePage({
           </Panel>
 
           {guide.caution && (
-            <p className="border-l-2 border-rule pl-4 text-xs leading-relaxed text-ink-45">
+            <p className="text-xs leading-relaxed text-soft">
               {guide.caution}
             </p>
           )}

@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import PageShell from "@/components/layout/PageShell";
 import PlantCard from "@/components/PlantCard";
-import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -128,7 +126,7 @@ export default function DiagnoseFlow() {
     return (
       <PageShell>
         <SectionTitle as="h1">어떤 식물을 진단할까요?</SectionTitle>
-        <p className="mt-2 text-sm leading-relaxed text-ink-70">
+        <p className="mt-2 text-sm leading-relaxed text-soft">
           상태가 걱정되는 식물을 고르면 몇 가지 질문으로 원인을 찾아드려요.
         </p>
         <PlantPicker />
@@ -143,15 +141,17 @@ export default function DiagnoseFlow() {
     <PageShell className="max-w-2xl">
       <BackLink href={`/plants/${plantId}`} label="나가기" />
 
-      <div className="mt-6 h-1 w-full rounded-full bg-rule">
-        <div
-          className="h-1 rounded-full bg-leaf transition-[width] duration-300"
-          style={{ width: `${(current / TOTAL) * 100}%` }}
-        />
+      <div className="mt-6 flex items-center gap-4">
+        <div className="h-0.5 flex-1 bg-hair">
+          <div
+            className="h-0.5 bg-ink transition-[width] duration-300"
+            style={{ width: `${(current / TOTAL) * 100}%` }}
+          />
+        </div>
+        <p className="shrink-0 font-mono text-xs text-soft">
+          {current} / {TOTAL}
+        </p>
       </div>
-      <p className="mt-3 text-xs text-ink-45">
-        질문 {current} / {TOTAL}
-      </p>
 
       {error && (
         <>
@@ -179,15 +179,15 @@ export default function DiagnoseFlow() {
           <SectionTitle as="h1" className="mt-8">
             {question.question}
           </SectionTitle>
-          <p className="mt-2 text-sm text-ink-70">{question.why}</p>
+          <p className="mt-2 text-sm text-soft">{question.why}</p>
 
-          <div className="mt-7 flex flex-col gap-2.5">
+          <div className="mt-7 border-t border-hair">
             {question.options.map((option) => (
               <button
                 key={option}
                 type="button"
                 onClick={() => choose(option)}
-                className="w-full rounded-md border border-rule bg-sheet px-4 py-3.5 text-left text-sm text-ink transition-colors hover:border-leaf hover:bg-leaf-50"
+                className="w-full border-b border-hair py-3.5 text-left text-sm text-ink transition-colors hover:underline hover:underline-offset-4"
               >
                 {option}
               </button>
@@ -250,13 +250,13 @@ function PlantPicker() {
 
   // /plants 와 같은 카드와 그리드. 배지만 물주기 대신 진단으로 바꾼다.
   return (
-    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-8 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
       {plants.map((plant) => (
         <PlantCard
           key={plant.id}
           plant={plant}
           href={`/diagnose?plantId=${plant.id}`}
-          aside={<Badge tone="leaf">진단하기</Badge>}
+          aside={<span className="shrink-0 text-xs text-soft">진단하기</span>}
         />
       ))}
     </div>
@@ -267,10 +267,9 @@ function BackLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="-ml-1 inline-flex items-center gap-0.5 text-sm text-ink-70 transition-colors hover:text-ink"
+      className="text-sm text-soft transition-colors hover:text-ink"
     >
-      <ChevronLeft aria-hidden className="size-4" />
-      {label}
+      ← {label}
     </Link>
   );
 }

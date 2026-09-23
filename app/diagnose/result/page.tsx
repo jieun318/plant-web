@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import PageShell from "@/components/layout/PageShell";
-import Badge from "@/components/ui/Badge";
+import ReasonList from "@/components/ReasonList";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
+import StatusText from "@/components/ui/StatusText";
 import { apiFetch } from "@/lib/api";
 import {
   getDiagnosisServerSnapshot,
@@ -68,7 +69,7 @@ export default function DiagnosisResultPage() {
     return (
       <PageShell className="max-w-2xl">
         <SectionTitle as="h1">진단 결과가 없어요</SectionTitle>
-        <p className="mt-2 text-sm leading-relaxed text-ink-70">
+        <p className="mt-2 text-sm leading-relaxed text-soft">
           진단을 먼저 진행해주세요.
         </p>
         <Button href="/plants" className="mt-6">
@@ -82,36 +83,23 @@ export default function DiagnosisResultPage() {
 
   return (
     <PageShell className="max-w-2xl">
-      <Badge tone="clay">{result.cause}</Badge>
-
-      <SectionTitle as="h1" className="mt-3">
-        {result.title}
-      </SectionTitle>
+      <SectionTitle as="h1">{result.title}</SectionTitle>
+      <p className="mt-2">
+        <StatusText>{result.cause}</StatusText>
+      </p>
 
       <Panel title="이렇게 판단했어요" className="mt-9">
-        <ul className="flex flex-col gap-2">
-          {result.reasons.map((reason) => (
-            <li
-              key={reason}
-              className="flex gap-2 text-sm leading-relaxed text-ink-70"
-            >
-              <span aria-hidden className="text-ink-45">
-                ·
-              </span>
-              <span>{reason}</span>
-            </li>
-          ))}
-        </ul>
+        <ReasonList reasons={result.reasons} />
       </Panel>
 
-      <Panel title="지금 할 일" className="mt-5">
-        <ul className="flex flex-col gap-2">
+      <Panel title="지금 할 일" className="mt-9">
+        <ul>
           {result.actions.map((action) => {
             const checked = done.includes(action);
 
             return (
-              <li key={action}>
-                <label className="flex cursor-pointer items-start gap-3 rounded-md border border-rule bg-sheet px-4 py-3.5 transition-colors hover:border-wood">
+              <li key={action} className="first:[&>label]:border-t-0 first:[&>label]:pt-0">
+                <label className="flex cursor-pointer items-start gap-3 border-t border-hair py-3">
                   <input
                     type="checkbox"
                     checked={checked}
@@ -120,11 +108,11 @@ export default function DiagnosisResultPage() {
                         checked ? prev.filter((a) => a !== action) : [...prev, action]
                       )
                     }
-                    className="mt-0.5 size-4 shrink-0 accent-leaf"
+                    className="mt-0.5 size-4 shrink-0 accent-ink"
                   />
                   <span
                     className={`text-sm leading-relaxed ${
-                      checked ? "text-ink-45 line-through" : "text-ink"
+                      checked ? "text-faint line-through" : "text-ink"
                     }`}
                   >
                     {action}
@@ -140,7 +128,7 @@ export default function DiagnosisResultPage() {
 
       {/* 저장하면 물주기 일정이 바뀐다. 모르고 누르면 달력이 갑자기 달라 보인다. */}
       {result.waterIntervalDays > 0 && (
-        <p className="mt-6 text-sm leading-relaxed text-ink-70">
+        <p className="mt-8 text-sm leading-relaxed text-soft">
           저장하면 물주기 간격이{" "}
           <span className="font-medium text-ink">{result.waterIntervalDays}일</span>로
           바뀌어요.
@@ -148,16 +136,16 @@ export default function DiagnosisResultPage() {
       )}
 
       {handoff.saved ? (
-        <Button href={`/plants/${handoff.plantId}`} variant="link" full className="mt-8">
+        <Button href={`/plants/${handoff.plantId}`} variant="link" className="mt-6">
           저장했어요 · 식물로 돌아가기
         </Button>
       ) : (
-        <Button onClick={save} disabled={saving} full className="mt-8">
+        <Button onClick={save} disabled={saving} full className="mt-4">
           {saving ? "저장 중..." : "기록에 저장"}
         </Button>
       )}
 
-      <p className="mt-6 border-l-2 border-rule pl-3 text-xs leading-relaxed text-ink-45">
+      <p className="mt-6 text-xs leading-relaxed text-soft">
         참고용 안내입니다. 상태가 심하면 가까운 화훼농원에 문의하세요.
       </p>
     </PageShell>

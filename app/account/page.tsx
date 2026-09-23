@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PageShell from "@/components/layout/PageShell";
-import Badge from "@/components/ui/Badge";
+import InfoRow from "@/components/ui/InfoRow";
 import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { apiFetch } from "@/lib/api";
@@ -41,31 +41,29 @@ export default function AccountPage() {
     <PageShell className="max-w-3xl">
       <SectionTitle as="h1">계정 설정</SectionTitle>
 
-      <div className="mt-8 grid grid-cols-2 gap-4">
-        <StatCard label="내 식물" value={summary?.plants} unit="개" />
-        <StatCard label="진단 횟수" value={summary?.diagnoses} unit="회" />
-      </div>
-
-      <Panel title="알림" className="mt-5">
-        <div>
-          <ComingSoonRow label="물주기 알림" description="물 줄 날 아침에 알려드려요" />
-          <ComingSoonRow label="분갈이 시기 알림" description="분갈이할 때가 되면 알려드려요" />
-        </div>
+      <Panel title="요약" className="mt-8">
+        <dl>
+          <InfoRow label="내 식물" value={count(summary?.plants, "개")} mono />
+          <InfoRow label="진단 횟수" value={count(summary?.diagnoses, "회")} mono />
+        </dl>
       </Panel>
 
-      <Panel title="계정" className="mt-5">
-        <div>
-          <div className="flex items-center justify-between gap-4 border-b border-rule py-4">
-            <p className="text-sm text-ink">이용 상태</p>
-            <Badge>게스트</Badge>
-          </div>
-          <ComingSoonRow
-            label="이메일 연결"
-            description="연결하면 다른 기기에서도 내 식물을 볼 수 있어요"
-          />
-        </div>
+      <Panel title="알림" className="mt-9">
+        <ComingSoonRow label="물주기 알림" description="물 줄 날 아침에 알려드려요" />
+        <ComingSoonRow label="분갈이 시기 알림" description="분갈이할 때가 되면 알려드려요" />
+      </Panel>
 
-        <p className="mt-4 text-xs leading-relaxed text-ink-45">
+      <Panel title="계정" className="mt-9">
+        <div className="flex items-baseline justify-between gap-4 py-3">
+          <p className="text-sm text-ink">이용 상태</p>
+          <span className="text-sm text-soft">게스트</span>
+        </div>
+        <ComingSoonRow
+          label="이메일 연결"
+          description="연결하면 다른 기기에서도 내 식물을 볼 수 있어요"
+        />
+
+        <p className="mt-4 text-xs leading-relaxed text-soft">
           지금은 이 브라우저에 계정이 저장되어 있어요. 브라우저 기록을 지우거나 다른
           기기에서 열면 등록한 식물이 보이지 않을 수 있습니다.
         </p>
@@ -74,34 +72,19 @@ export default function AccountPage() {
   );
 }
 
-function StatCard({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: number | undefined;
-  unit: string;
-}) {
-  return (
-    <Panel className="text-center">
-      <p className="text-xs text-ink-45">{label}</p>
-      <p className="mt-1 font-serif text-3xl font-bold tracking-tight text-ink">
-        {value ?? "-"}
-        {value !== undefined && <span className="ml-0.5 text-base">{unit}</span>}
-      </p>
-    </Panel>
-  );
+/** 불러오기 전이나 실패했을 때는 "-" */
+function count(value: number | undefined, unit: string) {
+  return value === undefined ? "-" : `${value}${unit}`;
 }
 
 function ComingSoonRow({ label, description }: { label: string; description: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-rule py-4 last:border-b-0">
+    <div className="flex items-baseline justify-between gap-4 border-t border-hair py-3 first:border-t-0">
       <div className="min-w-0">
         <p className="text-sm text-ink">{label}</p>
-        <p className="mt-0.5 text-xs text-ink-45">{description}</p>
+        <p className="mt-0.5 text-xs text-soft">{description}</p>
       </div>
-      <span className="shrink-0 text-xs text-ink-45">준비 중</span>
+      <span className="shrink-0 font-mono text-xs text-faint">준비 중</span>
     </div>
   );
 }
