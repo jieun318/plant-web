@@ -1,3 +1,4 @@
+import { cleanRange } from "./plant";
 import type { Identification, IdentifyResult } from "@/types";
 
 // DB 행과 화면이 쓰는 형태를 오간다.
@@ -16,6 +17,11 @@ export function toIdentifyResult(row: Identification): IdentifyResult {
     humidity: row.humidity ?? "",
     repot: row.repot ?? "",
     waterIntervalDays: row.water_interval_days ?? 7,
+    // 범위가 없는 예전 기록은 0 으로 둔다. 화면과 상태 판정에서 "없음"으로 다룬다
+    tempMin: row.temp_min ?? 0,
+    tempMax: row.temp_max ?? 0,
+    humidityMin: row.humidity_min ?? 0,
+    humidityMax: row.humidity_max ?? 0,
     // note 는 저장하지 않는다. 화면에서 쓰지 않아 컬럼을 두지 않았다.
     note: "",
   };
@@ -23,6 +29,9 @@ export function toIdentifyResult(row: Identification): IdentifyResult {
 
 /** 판별 결과를 identifications 에 넣을 형태로 바꾼다. */
 export function toIdentificationRow(result: IdentifyResult, userId: string, photoUrl: string | null) {
+  const temp = cleanRange(result.tempMin, result.tempMax, "temp");
+  const humidity = cleanRange(result.humidityMin, result.humidityMax, "humidity");
+
   return {
     user_id: userId,
     photo_url: photoUrl,
@@ -35,6 +44,10 @@ export function toIdentificationRow(result: IdentifyResult, userId: string, phot
     humidity: result.humidity,
     repot: result.repot,
     water_interval_days: result.waterIntervalDays,
+    temp_min: temp?.min ?? null,
+    temp_max: temp?.max ?? null,
+    humidity_min: humidity?.min ?? null,
+    humidity_max: humidity?.max ?? null,
     confident: result.confident,
   };
 }
@@ -50,5 +63,9 @@ export function toPlantSpecies(row: Identification) {
     water: row.water,
     humidity: row.humidity,
     repot: row.repot,
+    temp_min: row.temp_min,
+    temp_max: row.temp_max,
+    humidity_min: row.humidity_min,
+    humidity_max: row.humidity_max,
   };
 }

@@ -9,15 +9,16 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
 import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionTitle from "@/components/ui/SectionTitle";
-import SpecimenLabel from "@/components/ui/SpecimenLabel";
+import SpecimenLabel, { type SpecimenField } from "@/components/ui/SpecimenLabel";
 import { apiFetch } from "@/lib/api";
 import {
   getIdentifyServerSnapshot,
   getIdentifySnapshot,
   subscribeIdentify,
 } from "@/lib/handoff";
+import { formatRange } from "@/lib/format";
 import { toIdentifyResult } from "@/lib/identification";
-import type { Identification, Plant } from "@/types";
+import type { Identification, IdentifyResult, Plant } from "@/types";
 
 /**
  * S-02 판별 결과.
@@ -144,14 +145,7 @@ export default function ResultView() {
                 no="가장 비슷한 종"
                 name={result.koreanName}
                 scientificName={result.scientificName}
-                fields={[
-                  { label: "난이도", value: result.difficulty },
-                  { label: "원산지", value: result.origin },
-                  { label: "빛", value: result.light },
-                  { label: "물", value: result.water },
-                  { label: "습도", value: result.humidity },
-                  { label: "분갈이", value: result.repot },
-                ].filter((field) => field.value)}
+                fields={specimenFields(result)}
               />
 
               {error && <ErrorMessage className="mt-6">{error}</ErrorMessage>}
@@ -192,6 +186,38 @@ export default function ResultView() {
       </div>
     </PageShell>
   );
+}
+
+/**
+ * 표본 라벨의 필드.
+ * 적정 온습도는 기기가 잰 값을 판단하는 기준이 되므로 맨 위에 둔다.
+ * 범위를 못 받았으면(예전 기록이거나 판별이 이상한 값을 줬을 때) 그 줄만 뺀다.
+ */
+function specimenFields(result: IdentifyResult): SpecimenField[] {
+  const rows: (SpecimenField | null)[] = [
+    result.tempMin < result.tempMax
+      ? {
+          label: "적정 온도",
+          value: formatRange(result.tempMin, result.tempMax, "°C"),
+          mono: true,
+        }
+      : null,
+    result.humidityMin < result.humidityMax
+      ? {
+          label: "적정 습도",
+          value: formatRange(result.humidityMin, result.humidityMax, "%"),
+          mono: true,
+        }
+      : null,
+    { label: "난이도", value: result.difficulty },
+    { label: "원산지", value: result.origin },
+    { label: "빛", value: result.light },
+    { label: "물", value: result.water },
+    { label: "습도", value: result.humidity },
+    { label: "분갈이", value: result.repot },
+  ];
+
+  return rows.filter((row): row is SpecimenField => Boolean(row?.value));
 }
 
 function BackLink() {

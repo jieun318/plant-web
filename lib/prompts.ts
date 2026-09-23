@@ -18,12 +18,21 @@ export const IDENTIFY_PROMPT = `너는 식물 판별 전문가다.
   "humidity": "습도 조건을 한 문장으로",
   "repot": "분갈이 시기를 한 문장으로",
   "waterIntervalDays": 7,
+  "tempMin": 18,
+  "tempMax": 27,
+  "humidityMin": 50,
+  "humidityMax": 60,
   "note": "이 식물의 특징을 한 문장으로"
 }
 
 규칙:
 - difficulty 는 "쉬움" | "보통" | "어려움" 중 하나만
 - waterIntervalDays 는 일반적인 실내 환경 기준 숫자
+- tempMin·tempMax(°C), humidityMin·humidityMax(%) 는 실내에서 이 식물이
+  잘 자라는 범위다. 센서가 잰 값이 이 밖이면 사용자에게 알리는 기준이 된다
+- 네 값 모두 정수. min 은 max 보다 작아야 한다
+- 범위를 너무 넓게 잡지 마라. 온도는 5~15도, 습도는 10~30%p 폭이 적당하다
+- 견딜 수 있는 한계가 아니라 잘 자라는 구간을 써라
 - light, water, humidity, repot 는 한 줄에 들어갈 길이로 짧게
 - 확신이 없거나 식물이 아니면 confident 를 false 로 하고
   koreanName 에 "판별 불가"라고 써라

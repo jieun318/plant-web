@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { toPlantSpecies } from "@/lib/identification";
+import { cleanRange } from "@/lib/plant";
 import { getUserId, supabaseServer, uploadPhoto } from "@/lib/supabase-server";
 import type { Identification, IdentifyResult } from "@/types";
 
@@ -66,6 +67,11 @@ type PlantInsert = {
   photo_url: string | null;
   water_interval: number;
   identification_id: string | null;
+  // 판별이 정한 관찰 기준. 없으면 관찰 상태를 판정하지 않는다
+  temp_min: number | null;
+  temp_max: number | null;
+  humidity_min: number | null;
+  humidity_max: number | null;
 };
 
 /** 판별 기록을 그대로 복사해 등록한다. */
@@ -109,6 +115,9 @@ async function fromResult(
     }
   }
 
+  const temp = cleanRange(result.tempMin, result.tempMax, "temp");
+  const humidity = cleanRange(result.humidityMin, result.humidityMax, "humidity");
+
   return {
     user_id: userId,
     species: result.koreanName,
@@ -122,6 +131,10 @@ async function fromResult(
     photo_url: photoUrl,
     water_interval: waterInterval(result.waterIntervalDays),
     identification_id: null,
+    temp_min: temp?.min ?? null,
+    temp_max: temp?.max ?? null,
+    humidity_min: humidity?.min ?? null,
+    humidity_max: humidity?.max ?? null,
   };
 }
 

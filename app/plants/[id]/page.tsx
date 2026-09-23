@@ -14,7 +14,7 @@ import SectionHeader from "@/components/ui/SectionHeader";
 import SpecimenLabel, { type SpecimenField } from "@/components/ui/SpecimenLabel";
 import StatusText from "@/components/ui/StatusText";
 import { apiFetch } from "@/lib/api";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatRange } from "@/lib/format";
 import { wasPlantDeleted } from "@/lib/handoff";
 import {
   EARLY_WARN_COUNT,
@@ -309,6 +309,17 @@ function specimenFields(plant: Plant): SpecimenField[] {
       value: days <= 0 ? <StatusText className="text-[12.5px]">{waterPhrase(days)}</StatusText> : waterPhrase(days),
       mono: true,
     },
+    // 관찰 기준. 기기가 잰 값을 판단하는 기준이라 종 정보보다 위에 둔다
+    plant.temp_min !== null && plant.temp_max !== null
+      ? { label: "적정 온도", value: formatRange(plant.temp_min, plant.temp_max, "°C"), mono: true }
+      : null,
+    plant.humidity_min !== null && plant.humidity_max !== null
+      ? {
+          label: "적정 습도",
+          value: formatRange(plant.humidity_min, plant.humidity_max, "%"),
+          mono: true,
+        }
+      : null,
     plant.difficulty ? { label: "난이도", value: plant.difficulty } : null,
     plant.light ? { label: "빛", value: plant.light } : null,
     plant.water ? { label: "물", value: plant.water } : null,

@@ -10,6 +10,11 @@ export type IdentifyResult = {
   humidity: string;          // 습도 조건 한 줄
   repot: string;             // 분갈이 시기 한 줄
   waterIntervalDays: number; // 물주기 간격(일) — plants.water_interval 에 저장
+  // 관찰 기준이 되는 적정 범위. 기기가 잰 값이 이 밖이면 상태에 반영한다
+  tempMin: number;           // °C
+  tempMax: number;
+  humidityMin: number;       // %
+  humidityMax: number;
   note: string;              // 특징 한 줄
 };
 
@@ -28,6 +33,11 @@ export type Identification = {
   humidity: string | null;
   repot: string | null;
   water_interval_days: number | null;
+  // 등록할 때 plants 로 복사하는 적정 범위 (migration-identification-range.sql)
+  temp_min: number | null;
+  temp_max: number | null;
+  humidity_min: number | null;
+  humidity_max: number | null;
   confident: boolean;
   created_at: string;
 };
