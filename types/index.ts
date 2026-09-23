@@ -53,6 +53,12 @@ export type Plant = {
   water: string | null;
   humidity: string | null;
   repot: string | null;
+  // 관찰 기준. 판별에서 정한 적정 범위 — 기기가 잰 값이 이 밖이면 상태에 반영한다.
+  // 예전에 등록한 식물은 비어 있고, 그때는 상태를 판정하지 않는다.
+  temp_min: number | null;
+  temp_max: number | null;
+  humidity_min: number | null;
+  humidity_max: number | null;
 };
 
 // DB: care_logs 테이블
@@ -122,4 +128,65 @@ export type Diagnosis = {
   answers: DiagnosisAnswer[];
   photo_url: string | null;
   created_at: string;
+};
+
+// ── 관찰 기기 (migration-observation.sql) ──────────────────────────
+
+// DB: devices 테이블
+// 토큰 원문은 저장하지 않는다. 발급 화면에서 한 번만 보여주고 해시만 남긴다.
+export type Device = {
+  id: string;
+  user_id: string;
+  plant_id: string;
+  name: string;
+  /** 마지막으로 기록을 보낸 시각. 1시간 넘게 없으면 "연결 끊김" */
+  last_seen_at: string | null;
+  created_at: string;
+};
+
+// DB: sensor_readings 테이블
+// DHT11 이라 정수로 들어온다.
+export type SensorReading = {
+  id: string;
+  device_id: string;
+  plant_id: string;
+  temperature: number;
+  humidity: number;
+  measured_at: string;
+  created_at: string;
+};
+
+// DB: plant_snapshots 테이블
+export type PlantSnapshot = {
+  id: string;
+  device_id: string;
+  plant_id: string;
+  photo_url: string;
+  captured_at: string;
+  created_at: string;
+};
+
+/** 관찰 상태. 규칙으로 정한다. AI 는 visibleChange 만 알려준다. */
+export type ObservationStatus = "good" | "caution" | "check";
+
+// DB: daily_observations 테이블
+// 식물 × 날짜 한 줄. date 는 YYYY-MM-DD (한국 시간 기준 날짜).
+export type DailyObservation = {
+  id: string;
+  plant_id: string;
+  date: string;
+  photo_url: string | null;
+  avg_temp: number | null;
+  avg_humidity: number | null;
+  status: ObservationStatus;
+  ai_comment: string | null;
+  created_at: string;
+};
+
+// Gemini 가 만드는 관찰 코멘트
+export type ObservationComment = {
+  /** 2문장 이내. 사진에서 확실히 보이는 것과 주어진 온습도만 말한다 */
+  comment: string;
+  /** 잎·줄기에 눈에 띄는 변화가 보이는지. 상태를 "확인 필요"로 올릴 때 쓴다 */
+  visibleChange: boolean;
 };
