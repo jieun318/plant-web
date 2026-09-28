@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import PageShell from "@/components/layout/PageShell";
 import InfoRow from "@/components/ui/InfoRow";
 import Panel from "@/components/ui/Panel";
@@ -12,6 +13,28 @@ import { apiFetch } from "@/lib/api";
 // 알림과 이메일 연결은 아직 기능이 없어 "준비 중"으로만 보여준다.
 
 type Summary = { plants: number; devices: number; diagnoses: number };
+
+/** 개발용. 브라우저마다 익명 계정이 달라서, 어느 계정으로 보고 있는지 확인할 때 쓴다. */
+function AccountId() {
+  const [id, setId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setId(data.session?.user.id ?? null));
+  }, []);
+
+  if (!id) return null;
+
+  return (
+    <Panel title="개발용" aside="로컬에서만 보입니다" className="mt-9">
+      <dl>
+        <InfoRow label="이 브라우저의 계정 id" value={id} mono />
+      </dl>
+      <p className="mt-2 text-xs leading-relaxed text-soft">
+        브라우저나 프로필이 다르면 계정도 다릅니다. 다른 계정의 식물은 보이지 않아요.
+      </p>
+    </Panel>
+  );
+}
 
 export default function AccountPage() {
   // null = 불러오는 중이거나 실패. 숫자 자리에 "-" 를 둔다.
@@ -69,6 +92,8 @@ export default function AccountPage() {
           기기에서 열면 등록한 식물이 보이지 않을 수 있습니다.
         </p>
       </Panel>
+
+      {process.env.NODE_ENV === "development" && <AccountId />}
     </PageShell>
   );
 }
