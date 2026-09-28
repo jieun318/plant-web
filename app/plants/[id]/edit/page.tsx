@@ -9,17 +9,20 @@ import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
 import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
+import InfoRow from "@/components/ui/InfoRow";
 import { apiFetch } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { markPlantDeleted } from "@/lib/handoff";
 import LocationPicker, { OTHER, splitLocation, toLocation } from "@/components/LocationPicker";
 import { NICKNAME_MAX } from "@/lib/plant";
-import type { Plant } from "@/types";
+import type { Device, Plant } from "@/types";
 
 export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">) {
   const { id } = use(params);
   const router = useRouter();
 
   const [plant, setPlant] = useState<Plant | null>(null);
+  const [device, setDevice] = useState<Device | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [nickname, setNickname] = useState("");
@@ -43,6 +46,8 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
           setLoadError(data.error ?? "불러오지 못했습니다.");
           return;
         }
+
+        setDevice((data.device as Device) ?? null);
 
         const loaded = data.plant as Plant;
         const { choice, custom } = splitLocation(loaded.location);
@@ -148,6 +153,12 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
             </Button>
           </form>
 
+          <DeviceSection
+            plantId={id}
+            device={device}
+            onUnlink={() => setDevice(null)}
+          />
+
           <DeleteSection plantId={id} name={plant.nickname || plant.species} />
         </>
       )}
@@ -156,6 +167,108 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
 }
 
 /** 삭제는 한 번 더 묻는다. 기록과 사진이 모두 지워지고 되돌릴 수 없다. */
+/** 연결된 기기. 해제해도 지금까지 쌓인 기록은 남는다. */
+function DeviceSection({
+  plantId,
+  device,
+  onUnlink,
+}: {
+  plantId: string;
+  device: Device | null;
+  onUnlink: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function unlink() {
+    if (busy) return;
+
+    setBusy(true);
+    setError(null);
+
+    try {
+      const res = await apiFetch(`/api/plants/${plantId}/device`, { method: "DELETE" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "연결을 해제하지 못했습니다.");
+        return;
+      }
+
+      setConfirming(false);
+      onUnlink();
+    } catch {
+      setError("연결을 해제하지 못했습니다. 연결을 확인해 주세요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel title="기기" className="mt-10">
+      {device ? (
+        <>
+          <dl>
+            <InfoRow label="이름" value={device.name} mono />
+            <InfoRow
+              label="마지막 기록"
+              value={device.last_seen_at ? formatDateTime(device.last_seen_at) : "아직 없음"}
+              mono
+            />
+          </dl>
+
+          {error && <ErrorMessage className="mt-3">{error}</ErrorMessage>}
+
+          {confirming ? (
+            <>
+              <p className="mt-4 text-sm leading-relaxed text-alert">
+                연결을 해제하면 이 기기는 더 이상 기록을 보낼 수 없어요. 지금까지 쌓인
+                온습도와 사진은 그대로 남습니다.
+              </p>
+              <div className="mt-4 flex items-center gap-6">
+                <Button variant="danger" onClick={unlink} disabled={busy}>
+                  {busy ? "해제 중..." : "연결 해제"}
+                </Button>
+                <Button variant="link" onClick={() => setConfirming(false)} disabled={busy}>
+                  취소
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="mt-4 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+              <Button
+                variant="link"
+                size="sm"
+                href={`/plants/new?plant=${plantId}&step=device`}
+              >
+                새 코드 발급
+              </Button>
+              <Button variant="link" size="sm" onClick={() => setConfirming(true)}>
+                연결 해제
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="text-sm leading-relaxed text-soft">
+            연결된 기기가 없어요. 기기를 연결하면 매일 사진과 온습도를 기록합니다.
+          </p>
+          <Button
+            variant="link"
+            size="sm"
+            className="mt-3"
+            href={`/plants/new?plant=${plantId}&step=device`}
+          >
+            기기 연결
+          </Button>
+        </>
+      )}
+    </Panel>
+  );
+}
+
 function DeleteSection({ plantId, name }: { plantId: string; name: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);

@@ -26,6 +26,15 @@ export async function GET(req: NextRequest) {
 
   const plantIds = (plants ?? []).map((p) => p.id);
 
+  const { count: devices, error: deviceError } = await supabaseServer
+    .from("devices")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (deviceError) {
+    console.error("[account:GET devices]", deviceError.code, deviceError.message);
+  }
+
   // diagnoses 에는 user_id 가 없다. 내 식물 id 로 센다.
   let diagnoses = 0;
   if (plantIds.length > 0) {
@@ -40,5 +49,9 @@ export async function GET(req: NextRequest) {
     diagnoses = count ?? 0;
   }
 
-  return NextResponse.json({ plants: plantIds.length, diagnoses });
+  return NextResponse.json({
+    plants: plantIds.length,
+    devices: devices ?? 0,
+    diagnoses,
+  });
 }

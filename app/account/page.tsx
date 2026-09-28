@@ -11,7 +11,7 @@ import { apiFetch } from "@/lib/api";
 // 로그아웃 버튼은 넣지 않는다. 로그인 없이 쓰는 구조라 로그아웃하면 등록한 식물을 전부 잃는다.
 // 알림과 이메일 연결은 아직 기능이 없어 "준비 중"으로만 보여준다.
 
-type Summary = { plants: number; diagnoses: number };
+type Summary = { plants: number; devices: number; diagnoses: number };
 
 export default function AccountPage() {
   // null = 불러오는 중이거나 실패. 숫자 자리에 "-" 를 둔다.
@@ -43,7 +43,8 @@ export default function AccountPage() {
 
       <Panel title="요약" className="mt-8">
         <dl>
-          <InfoRow label="내 식물" value={count(summary?.plants, "개")} mono />
+          <InfoRow label="등록 식물" value={count(summary?.plants, "개")} mono />
+          <InfoRow label="연결 기기" value={count(summary?.devices, "대")} mono />
           <InfoRow label="진단 횟수" value={count(summary?.diagnoses, "회")} mono />
         </dl>
       </Panel>
