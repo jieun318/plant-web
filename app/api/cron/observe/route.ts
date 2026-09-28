@@ -7,14 +7,12 @@ import {
   decideStatus,
   hasRange,
   outOfRangeStreak,
+  pickDayPhoto,
   toDateKey,
 } from "@/lib/observation";
 import { getUserId, supabaseServer } from "@/lib/supabase-server";
 import type { DayAverage } from "@/lib/observation";
 import type { ObservationStatus, Plant, PlantSnapshot, SensorReading } from "@/types";
-
-// 대표 사진을 고르는 시각 (한국 시간). 이 시각에 가장 가까운 사진을 그날 사진으로 쓴다.
-const PHOTO_HOUR = 10;
 
 // 연속 이탈을 세려면 오늘 앞의 며칠이 필요하다. 넉넉히 훑는다.
 const STREAK_WINDOW = 7;
@@ -61,7 +59,7 @@ async function observe(plant: Plant, dateKey: string): Promise<Result> {
 
   const days: DayAverage[] = averageByDay(readings ?? []);
   const today = days.find((d) => d.date === dateKey);
-  const todayPhoto = pickPhoto(snapshots ?? [], dateKey);
+  const todayPhoto = pickDayPhoto(snapshots ?? [], dateKey);
 
   // 그날 기록이 아무것도 없으면 일지를 만들지 않는다. 빈 줄을 쌓아두지 않는다.
   if (!today && !todayPhoto) {
@@ -75,7 +73,7 @@ async function observe(plant: Plant, dateKey: string): Promise<Result> {
     .map((d) => d.date)
     .filter((d) => d < dateKey)
     .pop();
-  const previousPhoto = previousDate ? pickPhoto(snapshots ?? [], previousDate) : null;
+  const previousPhoto = previousDate ? pickDayPhoto(snapshots ?? [], previousDate) : null;
 
   let comment = "";
   let visibleChange = false;
@@ -119,20 +117,6 @@ async function observe(plant: Plant, dateKey: string): Promise<Result> {
   }
 
   return { plantId: plant.id, date: dateKey, status, comment };
-}
-
-/** 그날 사진 중 10시에 가장 가까운 것. */
-function pickPhoto(snapshots: PlantSnapshot[], dateKey: string): PlantSnapshot | null {
-  const sameDay = snapshots.filter((s) => toDateKey(s.captured_at) === dateKey);
-  if (sameDay.length === 0) return null;
-
-  const target = new Date(`${dateKey}T00:00:00.000Z`).getTime() + PHOTO_HOUR * 3_600_000;
-
-  return sameDay.reduce((best, s) => {
-    const hour = new Date(s.captured_at).getTime() + 9 * 3_600_000;
-    const bestHour = new Date(best.captured_at).getTime() + 9 * 3_600_000;
-    return Math.abs(hour - target) < Math.abs(bestHour - target) ? s : best;
-  });
 }
 
 /**

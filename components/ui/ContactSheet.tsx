@@ -35,14 +35,15 @@ export default function ContactSheet({ items, className }: Props) {
               ratio="square"
               className={item.today ? "outline outline-1 outline-offset-2 outline-ink" : undefined}
             />
+            {/* 좁은 칸이라 "오늘"은 줄을 나눈다. 한 줄에 붙이면 잘린다 */}
             <p
               className={`mt-[5px] font-mono text-[10.5px] ${
                 item.today ? "font-medium text-ink" : "text-soft"
               }`}
             >
               {item.date}
-              {item.today && " 오늘"}
             </p>
+            {item.today && <p className="font-mono text-[10.5px] text-ink">오늘</p>}
             {item.caption && (
               <p className="truncate text-xs text-ink group-hover:underline">{item.caption}</p>
             )}

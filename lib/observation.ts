@@ -123,3 +123,23 @@ export const STATUS_LABEL: Record<ObservationStatus, string> = {
   caution: "주의",
   check: "확인 필요",
 };
+
+/** 그날 사진 중 기준 시각(오전 10시)에 가장 가까운 것. 그 사진이 그날의 대표다. */
+export const PHOTO_HOUR = 10;
+
+export function pickDayPhoto<T extends { captured_at: string }>(
+  snapshots: T[],
+  dateKey: string
+): T | null {
+  const sameDay = snapshots.filter((s) => toDateKey(s.captured_at) === dateKey);
+  if (sameDay.length === 0) return null;
+
+  const target = new Date(`${dateKey}T00:00:00.000Z`).getTime() + PHOTO_HOUR * 3_600_000;
+  const shifted = (value: string) => new Date(value).getTime() + KST_OFFSET;
+
+  return sameDay.reduce((best, s) =>
+    Math.abs(shifted(s.captured_at) - target) < Math.abs(shifted(best.captured_at) - target)
+      ? s
+      : best
+  );
+}
