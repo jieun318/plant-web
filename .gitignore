@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 라즈베리파이 기기 설정과 보관함
+pi/.env
+pi/pending/
+pi/latest.jpg
+pi/.venv/

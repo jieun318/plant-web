@@ -1,0 +1,17 @@
+[Unit]
+Description=식물집사 관찰 기기
+# 네트워크가 올라온 뒤에 시작한다. 끊겨 있어도 보관함에 쌓아두므로 실패하지는 않는다.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/plant-web/pi
+ExecStart=/home/pi/plant-web/pi/.venv/bin/python3 observer.py
+# 죽으면 10초 뒤 다시 띄운다 (정전, 센서 오류 등)
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
