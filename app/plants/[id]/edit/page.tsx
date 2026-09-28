@@ -11,7 +11,8 @@ import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
 import InfoRow from "@/components/ui/InfoRow";
 import { apiFetch } from "@/lib/api";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatRange } from "@/lib/format";
+import { hasRange } from "@/lib/observation";
 import { markPlantDeleted } from "@/lib/handoff";
 import LocationPicker, { OTHER, splitLocation, toLocation } from "@/components/LocationPicker";
 import { NICKNAME_MAX } from "@/lib/plant";
@@ -153,6 +154,8 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
             </Button>
           </form>
 
+          <RangeSection plant={plant} />
+
           <DeviceSection
             plantId={id}
             device={device}
@@ -167,6 +170,41 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
 }
 
 /** 삭제는 한 번 더 묻는다. 기록과 사진이 모두 지워지고 되돌릴 수 없다. */
+/**
+ * 관찰 기준. 판별이 정한 값이라 여기서 고치지 않고 보여주기만 한다.
+ * 기기가 잰 값이 이 범위를 벗어나면 관찰일지에서 상태로 표시된다.
+ */
+function RangeSection({ plant }: { plant: Plant }) {
+  return (
+    <Panel title="관찰 기준" aside="판별할 때 정해집니다" className="mt-10">
+      {hasRange(plant) ? (
+        <>
+          <dl>
+            <InfoRow
+              label="적정 온도"
+              value={formatRange(plant.temp_min!, plant.temp_max!, "°C")}
+              mono
+            />
+            <InfoRow
+              label="적정 습도"
+              value={formatRange(plant.humidity_min!, plant.humidity_max!, "%")}
+              mono
+            />
+          </dl>
+          <p className="mt-2 text-xs leading-relaxed text-soft">
+            기기가 잰 값이 이 범위를 벗어나면 관찰일지에 주의·확인 필요로 표시돼요.
+          </p>
+        </>
+      ) : (
+        <p className="text-sm leading-relaxed text-soft">
+          이 식물에는 적정 범위가 없어요. 범위를 정하기 전에 등록한 식물이라
+          관찰 상태를 판정하지 않습니다. 사진으로 다시 등록하면 기준이 정해집니다.
+        </p>
+      )}
+    </Panel>
+  );
+}
+
 /** 연결된 기기. 해제해도 지금까지 쌓인 기록은 남는다. */
 function DeviceSection({
   plantId,
