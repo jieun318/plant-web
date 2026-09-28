@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCATION_MAX, NICKNAME_MAX, cleanText } from "@/lib/plant";
 import { getUserId, removePhotos, supabaseServer } from "@/lib/supabase-server";
-import type { CareLog } from "@/types";
+import type { CareLog, Device } from "@/types";
 
 /** GET /api/plants/[id] — 식물 하나와 그 기록 */
 export async function GET(req: NextRequest, ctx: RouteContext<"/api/plants/[id]">) {
@@ -45,7 +45,19 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/plants/[id]"
     console.error("[plant:GET logs]", logError.code, logError.message);
   }
 
-  return NextResponse.json({ plant, logs: await linkDiagnoses(id, logs ?? []) });
+  // 연결된 기기. 화면은 last_seen_at 으로 "연결 끊김"을 판단한다.
+  // 토큰 해시는 내보내지 않는다.
+  const { data: device } = await supabaseServer
+    .from("devices")
+    .select("id, user_id, plant_id, name, last_seen_at, created_at")
+    .eq("plant_id", id)
+    .maybeSingle<Device>();
+
+  return NextResponse.json({
+    plant,
+    logs: await linkDiagnoses(id, logs ?? []),
+    device: device ?? null,
+  });
 }
 
 // 진단 저장은 diagnoses 한 줄과 care_logs 한 줄을 같은 요청에서 잇달아 넣는다.
@@ -185,6 +197,13 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/plants/[i
       : { count: 0 };
     const shared = (sharing ?? 0) > 0;
 
+    // 기기가 올린 사진은 Storage 에도 남는다. 줄을 지우기 전에 주소를 모아둔다.
+    // (테이블 줄은 plants 를 지울 때 외래키로 함께 사라진다)
+    const { data: snapshots } = await supabaseServer
+      .from("plant_snapshots")
+      .select("photo_url")
+      .eq("plant_id", id);
+
     for (const table of ["guides", "diagnoses", "care_logs"] as const) {
       const { error } = await supabaseServer.from(table).delete().eq("plant_id", id);
       if (error) {
@@ -218,6 +237,10 @@ export async function DELETE(req: NextRequest, ctx: RouteContext<"/api/plants/[i
 
       if (plant.photo_url) await removePhotos([plant.photo_url]);
     }
+
+    // 관찰 사진은 이 식물만 쓰므로 공유 여부와 상관없이 지운다
+    const snapshotUrls = (snapshots ?? []).map((row) => row.photo_url).filter(Boolean);
+    if (snapshotUrls.length > 0) await removePhotos(snapshotUrls);
 
     return NextResponse.json({ ok: true });
   } catch (e) {

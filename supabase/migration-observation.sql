@@ -47,7 +47,8 @@ create index if not exists devices_user_idx on devices (user_id);
 -- plant_id 는 device 를 거치지 않고 바로 훑으려고 같이 둔다.
 create table if not exists sensor_readings (
   id          uuid primary key default gen_random_uuid(),
-  device_id   uuid not null references devices (id) on delete cascade,
+  -- 기기 연결을 해제해도 기록은 남아야 한다. 그래서 cascade 가 아니라 set null
+  device_id   uuid references devices (id) on delete set null,
   plant_id    uuid not null references plants (id) on delete cascade,
   temperature integer not null,
   humidity    integer not null,
@@ -66,7 +67,8 @@ create index if not exists sensor_readings_plant_idx
 -- 매일 정해진 시각에 찍은 사진. 그날 10시 사진이 관찰일지의 대표 사진이 된다.
 create table if not exists plant_snapshots (
   id          uuid primary key default gen_random_uuid(),
-  device_id   uuid not null references devices (id) on delete cascade,
+  -- 위와 같은 이유로 set null
+  device_id   uuid references devices (id) on delete set null,
   plant_id    uuid not null references plants (id) on delete cascade,
   photo_url   text not null,
   captured_at timestamptz not null,

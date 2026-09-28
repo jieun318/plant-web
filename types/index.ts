@@ -158,7 +158,8 @@ export type Device = {
 // DHT11 이라 정수로 들어온다.
 export type SensorReading = {
   id: string;
-  device_id: string;
+  /** 기기 연결을 해제하면 비워진다. 기록 자체는 남는다 */
+  device_id: string | null;
   plant_id: string;
   temperature: number;
   humidity: number;
@@ -169,7 +170,8 @@ export type SensorReading = {
 // DB: plant_snapshots 테이블
 export type PlantSnapshot = {
   id: string;
-  device_id: string;
+  /** 기기 연결을 해제하면 비워진다 */
+  device_id: string | null;
   plant_id: string;
   photo_url: string;
   captured_at: string;
