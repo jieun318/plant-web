@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import PageShell from "@/components/layout/PageShell";
 import Button from "@/components/ui/Button";
 import ErrorMessage from "@/components/ui/ErrorMessage";
@@ -22,6 +22,20 @@ const TABS: { id: GuideTopic; label: string }[] = [
   { id: "repot", label: "분갈이" },
   { id: "fertilize", label: "비료" },
 ];
+
+/** 가이드 하나를 받아온다. 없으면 서버가 만들어서 준다 (몇 초 걸린다). */
+async function fetchGuide(
+  plantId: string,
+  topic: GuideTopic,
+  signal?: AbortSignal
+): Promise<CareGuide> {
+  const res = await apiFetch(`/api/plants/${plantId}/guide?topic=${topic}`, { signal });
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.error ?? "가이드를 불러오지 못했습니다.");
+
+  return data as CareGuide;
+}
 
 export default function PlantGuidePage({
   params,
@@ -53,6 +67,46 @@ export default function PlantGuidePage({
     };
   }, [id]);
 
+  // 화면이 아직 열려 있는지. 배경 생성은 탭을 옮겨도 끊기지 않고 끝까지 돌아야 한다.
+  const open = useRef(true);
+  useEffect(() => {
+    open.current = true;
+    return () => {
+      open.current = false;
+    };
+  }, []);
+
+  // 받아온 탭을 effect 바깥에서도 보려고 따로 들고 있는다 (배경 생성 루프에서 쓴다)
+  const loaded = useRef<Partial<Record<GuideTopic, CareGuide>>>({});
+  const save = useCallback((topic: GuideTopic, guide: CareGuide) => {
+    loaded.current[topic] = guide;
+    setGuides((prev) => ({ ...prev, [topic]: guide }));
+  }, []);
+
+  // 받아오는 중인 탭의 약속을 들고 있는다. 보고 있는 탭과 배경 생성이 같은 탭을
+  // 두 번 부르지 않게 하고, 개발 모드에서 effect 가 두 번 실행돼도 한 번만 부르게 한다.
+  const inFlight = useRef<Map<GuideTopic, Promise<CareGuide>>>(new Map());
+
+  const load = useCallback(
+    (topic: GuideTopic) => {
+      const already = inFlight.current.get(topic);
+      if (already) return already;
+
+      // 만드는 데 오래 걸리면 멈춘다. 빈 화면으로 기다리게 두지 않는다.
+      const stop = new AbortController();
+      const timer = setTimeout(() => stop.abort(), TIMEOUT_MS);
+
+      const pending = fetchGuide(id, topic, stop.signal).finally(() => {
+        clearTimeout(timer);
+        inFlight.current.delete(topic);
+      });
+
+      inFlight.current.set(topic, pending);
+      return pending;
+    },
+    [id]
+  );
+
   useEffect(() => {
     // 이미 받았거나 이미 실패한 탭은 다시 부르지 않는다
     if (guides[topic] || errors[topic]) return;
@@ -60,27 +114,9 @@ export default function PlantGuidePage({
     let alive = true;
 
     (async () => {
-      // 만드는 데 오래 걸리면 멈춘다. 빈 화면으로 기다리게 두지 않는다.
-      const stop = new AbortController();
-      const timer = setTimeout(() => stop.abort(), TIMEOUT_MS);
-
       try {
-        const res = await apiFetch(`/api/plants/${id}/guide?topic=${topic}`, {
-          signal: stop.signal,
-        });
-        const data = await res.json();
-
-        if (!alive) return;
-
-        if (!res.ok) {
-          setErrors((prev) => ({
-            ...prev,
-            [topic]: data.error ?? "가이드를 불러오지 못했습니다.",
-          }));
-          return;
-        }
-
-        setGuides((prev) => ({ ...prev, [topic]: data as CareGuide }));
+        const guide = await load(topic);
+        if (alive) save(topic, guide);
       } catch (e) {
         if (!alive) return;
 
@@ -89,17 +125,44 @@ export default function PlantGuidePage({
           [topic]:
             e instanceof Error && e.name === "AbortError"
               ? "만드는 데 너무 오래 걸려 멈췄어요."
-              : "가이드를 불러오지 못했습니다. 연결을 확인해 주세요.",
+              : e instanceof Error
+                ? e.message
+                : "가이드를 불러오지 못했습니다. 연결을 확인해 주세요.",
         }));
-      } finally {
-        clearTimeout(timer);
       }
     })();
 
     return () => {
       alive = false;
     };
-  }, [id, topic, guides, errors]);
+  }, [topic, guides, errors, load, save]);
+
+  // 보고 있는 탭이 나오면 나머지 탭을 배경에서 미리 만들어 둔다.
+  // 탭을 눌렀을 때 또 몇 초를 기다리지 않게 하려는 것이다.
+  // 한 번에 하나씩 순서대로 부른다 (Gemini 분당 한도를 건드리지 않으려고).
+  // 여기서 실패해도 화면에 알리지 않는다. 그 탭을 직접 열면 위 effect 가 다시 부른다.
+  const prefetched = useRef(false);
+
+  useEffect(() => {
+    if (prefetched.current || !guides[topic]) return;
+    prefetched.current = true;
+
+    // 이 루프는 effect 가 다시 실행돼도 끊지 않는다. 끊으면 다음 탭을 영영 만들지 않는다.
+    // 화면을 떠나면 open 이 false 가 되어 멈춘다.
+    (async () => {
+      for (const tab of TABS) {
+        if (!open.current) return;
+        if (loaded.current[tab.id]) continue;
+
+        try {
+          const guide = await load(tab.id);
+          if (open.current) save(tab.id, guide);
+        } catch {
+          // 조용히 넘어간다. 그 탭을 직접 열면 위 effect 가 다시 부른다.
+        }
+      }
+    })();
+  }, [topic, guides, load, save]);
 
   const guide = guides[topic];
   const error = errors[topic];
