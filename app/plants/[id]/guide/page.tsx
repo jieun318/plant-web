@@ -13,6 +13,9 @@ import Tabs from "@/components/ui/Tabs";
 import { apiFetch } from "@/lib/api";
 import type { CareGuide, GuideTopic, Plant } from "@/types";
 
+// 가이드 하나를 만드는 데 걸리는 시간의 한계. 넘으면 멈추고 다시 시도하게 한다.
+const TIMEOUT_MS = 20_000;
+
 const TABS: { id: GuideTopic; label: string }[] = [
   { id: "water", label: "물주기" },
   { id: "light", label: "빛" },
@@ -57,8 +60,14 @@ export default function PlantGuidePage({
     let alive = true;
 
     (async () => {
+      // 만드는 데 오래 걸리면 멈춘다. 빈 화면으로 기다리게 두지 않는다.
+      const stop = new AbortController();
+      const timer = setTimeout(() => stop.abort(), TIMEOUT_MS);
+
       try {
-        const res = await apiFetch(`/api/plants/${id}/guide?topic=${topic}`);
+        const res = await apiFetch(`/api/plants/${id}/guide?topic=${topic}`, {
+          signal: stop.signal,
+        });
         const data = await res.json();
 
         if (!alive) return;
@@ -72,13 +81,18 @@ export default function PlantGuidePage({
         }
 
         setGuides((prev) => ({ ...prev, [topic]: data as CareGuide }));
-      } catch {
+      } catch (e) {
         if (!alive) return;
 
         setErrors((prev) => ({
           ...prev,
-          [topic]: "가이드를 불러오지 못했습니다. 연결을 확인해 주세요.",
+          [topic]:
+            e instanceof Error && e.name === "AbortError"
+              ? "만드는 데 너무 오래 걸려 멈췄어요."
+              : "가이드를 불러오지 못했습니다. 연결을 확인해 주세요.",
         }));
+      } finally {
+        clearTimeout(timer);
       }
     })();
 
@@ -115,8 +129,15 @@ export default function PlantGuidePage({
         />
       </div>
 
-      {/* 만드는 데 몇 초 걸린다. 화면 전체를 가리지 않고 이 자리에만 표시한다 */}
-      {loading && <Loading className="mt-10" />}
+      {/* 만드는 데 몇 초 걸린다. 화면 전체를 가리지 않고 탭 아래에만 표시한다 */}
+      {loading && (
+        <div className="mt-6">
+          <Loading label="관리법을 만드는 중입니다..." />
+          <p className="mt-1.5 text-xs leading-relaxed text-soft">
+            처음 여는 탭은 몇 초 걸려요. 한 번 만들어 두면 다음부터는 바로 열립니다.
+          </p>
+        </div>
+      )}
       {error && (
         <>
           <ErrorMessage className="mt-6">{error}</ErrorMessage>
