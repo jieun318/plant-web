@@ -239,6 +239,13 @@ async function main() {
   console.log(`사진 ${photoCount}건 (하루 ${PHOTO_HOURS.join("·")}시)`);
   console.log(`습도가 적정 범위 아래인 날: ${dry}`);
   console.log(`\n기기 토큰 (라즈베리파이 pi/.env 에 넣어 쓸 수 있습니다)\n  ${token}`);
+  console.log(
+    `
+다음: 관찰일지를 채우려면
+  npm run observe -- ${plant.id} --days 14
+` +
+      "  (또는 관찰일지 화면의 개발용 [지난 14일 채우기] 버튼)"
+  );
 }
 
 main().catch((e) => {
