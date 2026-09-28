@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/observe",
+      "schedule": "0 2 * * *"
+    }
+  ],
+  "functions": {
+    "app/api/cron/observe/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}

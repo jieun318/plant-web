@@ -4,6 +4,7 @@ import {
   DIAGNOSE_RESULT_PROMPT,
   GUIDE_PROMPT,
   IDENTIFY_PROMPT,
+  OBSERVE_PROMPT,
 } from "./prompts";
 import type {
   DiagnosisAnswer,
@@ -12,6 +13,7 @@ import type {
   GuideContent,
   GuideTopic,
   IdentifyResult,
+  ObservationComment,
 } from "@/types";
 
 // 이 파일은 서버에서만 import 할 것.
@@ -73,6 +75,25 @@ type Part =
   | { text: string };
 
 export type Photo = { base64: string; mimeType: string };
+
+/** 주소에 있는 사진을 Gemini 에 넣을 수 있는 형태로 가져온다. 실패하면 null. */
+export async function loadPhoto(url: string | null): Promise<Photo | null> {
+  if (!url) return null;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return {
+      base64: buffer.toString("base64"),
+      mimeType: res.headers.get("content-type") ?? "image/jpeg",
+    };
+  } catch {
+    // 사진을 못 읽어도 나머지는 이어간다
+    return null;
+  }
+}
 
 /** 사진이 없을 수도 있으므로 파트를 조립해서 보낸다. */
 async function ask<T>(parts: Part[]): Promise<T> {
@@ -157,4 +178,50 @@ export async function buildGuide(input: GuideInput): Promise<GuideContent> {
   ].join("\n");
 
   return ask<GuideContent>([{ text: `${facts}\n\n${GUIDE_PROMPT}` }]);
+}
+
+export type ObserveInput = {
+  species: string;
+  /** 오늘 사진. 없으면 온습도만 보고 쓴다 */
+  today: Photo | null;
+  /** 어제(또는 그 전) 사진. 비교 대상이 없으면 null */
+  previous: Photo | null;
+  avgTemp: number | null;
+  avgHumidity: number | null;
+  tempRange: string | null;
+  humidityRange: string | null;
+};
+
+/**
+ * 하루 관찰 코멘트를 받는다.
+ * 사진 두 장(어제 → 오늘)과 하루 평균 온습도만 주고, 거기서 보이는 것만 쓰게 한다.
+ */
+export async function buildObservation(input: ObserveInput): Promise<ObservationComment> {
+  const lines = [
+    `식물: ${input.species}`,
+    input.avgTemp === null
+      ? "하루 평균 온도: 기록 없음"
+      : `하루 평균 온도: ${input.avgTemp}°C${input.tempRange ? ` (적정 ${input.tempRange})` : ""}`,
+    input.avgHumidity === null
+      ? "하루 평균 습도: 기록 없음"
+      : `하루 평균 습도: ${input.avgHumidity}%${input.humidityRange ? ` (적정 ${input.humidityRange})` : ""}`,
+    input.previous ? "사진은 두 장이다. 첫 장이 어제, 둘째 장이 오늘이다." : "사진은 오늘 한 장뿐이다.",
+  ];
+
+  const parts: Part[] = [];
+  if (input.previous) {
+    parts.push({ inlineData: { mimeType: input.previous.mimeType, data: input.previous.base64 } });
+  }
+  if (input.today) {
+    parts.push({ inlineData: { mimeType: input.today.mimeType, data: input.today.base64 } });
+  }
+  parts.push({ text: `${lines.join("\n")}\n\n${OBSERVE_PROMPT}` });
+
+  const result = await ask<ObservationComment>(parts);
+
+  return {
+    comment: String(result.comment ?? "").trim(),
+    // 모델이 문자열로 줄 때가 있다
+    visibleChange: result.visibleChange === true || String(result.visibleChange) === "true",
+  };
 }

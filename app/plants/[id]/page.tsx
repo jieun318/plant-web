@@ -13,6 +13,7 @@ import PhotoFrame from "@/components/ui/PhotoFrame";
 import SectionHeader from "@/components/ui/SectionHeader";
 import SpecimenLabel, { type SpecimenField } from "@/components/ui/SpecimenLabel";
 import StatusText from "@/components/ui/StatusText";
+import { STATUS_LABEL } from "@/lib/observation";
 import { apiFetch } from "@/lib/api";
 import { formatDate, formatDateTime, formatRange } from "@/lib/format";
 import { wasPlantDeleted } from "@/lib/handoff";
@@ -277,6 +278,9 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
             )}
           </section>
 
+          {/* 배포에서는 Vercel Cron 이 매일 오전 11시에 만든다. 로컬에서 미리 보려고 둔 버튼 */}
+          {process.env.NODE_ENV === "development" && <ObserveNow plantId={plant.id} />}
+
           <div className="mt-[26px] flex flex-wrap items-baseline gap-x-[26px] gap-y-2 text-[13px]">
             <span className="text-soft">필요할 때만</span>
             <Button variant="link" href={`/diagnose?plantId=${plant.id}`}>
@@ -289,6 +293,56 @@ export default function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
         </>
       )}
     </PageShell>
+  );
+}
+
+/** 개발용. 오늘 관찰을 지금 만들어 본다. 만든 결과를 그 자리에 보여준다. */
+function ObserveNow({ plantId }: { plantId: string }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function run() {
+    if (busy) return;
+
+    setBusy(true);
+    setMessage(null);
+
+    try {
+      const res = await apiFetch("/api/cron/observe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plantId }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error ?? "만들지 못했습니다.");
+        return;
+      }
+
+      const result = data.results?.[0];
+      setMessage(
+        result?.skipped
+          ? result.skipped
+          : `${STATUS_LABEL[result.status as keyof typeof STATUS_LABEL]} · ${result.comment || "코멘트 없음"}`
+      );
+    } catch {
+      setMessage("만들지 못했습니다. 연결을 확인해 주세요.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="mt-[34px]">
+      <SectionHeader title="개발용" aside="로컬에서만 보입니다" />
+      <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+        <Button variant="link" size="sm" onClick={run} disabled={busy}>
+          {busy ? "만드는 중..." : "지금 관찰 생성"}
+        </Button>
+        {message && <span className="text-[13px] text-soft">{message}</span>}
+      </div>
+    </section>
   );
 }
 
