@@ -10,8 +10,13 @@ import { fileToDataUrl, imageMimeType, resizeImage, withImageType } from "@/lib/
 import type { IdentifyResult } from "@/types";
 
 type Props = {
-  /** dropzone: 홈의 큰 영역 / button: 빈 목록처럼 자리가 좁을 때 */
+  /** dropzone: 큰 영역 / button: 빈 목록처럼 자리가 좁을 때 */
   variant?: "dropzone" | "button";
+  /**
+   * 판별이 끝나면 갈 곳. 기록을 남기지 못했으면 id 가 null 이고,
+   * 그때는 브라우저에 담아둔 결과를 다음 화면이 읽는다.
+   */
+  to?: (identificationId: string | null) => string;
 };
 
 /**
@@ -30,7 +35,9 @@ async function identify(form: FormData): Promise<Response> {
   }
 }
 
-export default function PhotoUpload({ variant = "dropzone" }: Props) {
+const toResult = (id: string | null) => (id ? `/result?id=${id}` : "/result");
+
+export default function PhotoUpload({ variant = "dropzone", to = toResult }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -66,15 +73,9 @@ export default function PhotoUpload({ variant = "dropzone" }: Props) {
 
       const { id } = data as { id: string | null };
 
-      // 기록이 남았으면 주소로 넘긴다. 새로고침해도 결과가 그대로 있다.
-      if (id) {
-        router.push(`/result?id=${id}`);
-        return;
-      }
-
-      // 판별에 실패했거나 세션이 없어 남기지 못한 경우. 브라우저에 담아 넘긴다.
+      // 판별에 실패했거나 세션이 없어 남기지 못한 경우를 대비해 브라우저에도 담는다
       saveIdentify({ result: data as IdentifyResult, photo });
-      router.push("/result");
+      router.push(to(id));
     } catch {
       setError("사진을 보내지 못했습니다. 연결을 확인해 주세요.");
     } finally {

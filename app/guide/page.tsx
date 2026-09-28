@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import PageShell from "@/components/layout/PageShell";
-import PhotoUpload from "@/components/PhotoUpload";
 import PlantCard from "@/components/PlantCard";
+import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import Loading from "@/components/ui/Loading";
@@ -60,7 +60,7 @@ export default function GuideIndexPage() {
           <EmptyState
             title="가이드를 만들 식물이 없어요"
             description="식물을 먼저 등록하면 그 식물에 맞는 관리법을 만들어 드립니다."
-            action={<PhotoUpload variant="button" />}
+            action={<Button href="/plants/new">식물 추가</Button>}
           />
         </div>
       )}

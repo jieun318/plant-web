@@ -11,17 +11,9 @@ import Panel from "@/components/ui/Panel";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { apiFetch } from "@/lib/api";
 import { markPlantDeleted } from "@/lib/handoff";
-import { LOCATIONS, LOCATION_MAX, NICKNAME_MAX } from "@/lib/plant";
+import LocationPicker, { OTHER, splitLocation, toLocation } from "@/components/LocationPicker";
+import { NICKNAME_MAX } from "@/lib/plant";
 import type { Plant } from "@/types";
-
-const OTHER = "기타";
-
-/** 저장된 두는 곳을 선택지와 직접 입력으로 나눈다. */
-function splitLocation(location: string | null): { choice: string | null; custom: string } {
-  if (!location) return { choice: null, custom: "" };
-  if ((LOCATIONS as readonly string[]).includes(location)) return { choice: location, custom: "" };
-  return { choice: OTHER, custom: location };
-}
 
 export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">) {
   const { id } = use(params);
@@ -68,7 +60,7 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
     };
   }, [id]);
 
-  const location = choice === OTHER ? custom.trim() : choice;
+  const location = toLocation(choice, custom);
   const locationChanged = plant !== null && (plant.location ?? null) !== (location || null);
 
   async function save(e: FormEvent) {
@@ -135,41 +127,12 @@ export default function PlantEditPage({ params }: PageProps<"/plants/[id]/edit">
             </Panel>
 
             <Panel title="두는 곳">
-              <div role="radiogroup" aria-label="두는 곳" className="flex flex-wrap gap-x-5 gap-y-2.5">
-                {[...LOCATIONS, OTHER].map((option) => {
-                  const selected = choice === option;
-
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      // 고른 것을 다시 누르면 선택을 푼다. 두는 곳은 비워둘 수 있다.
-                      onClick={() => setChoice(selected ? null : option)}
-                      className={`text-sm transition-colors ${
-                        selected
-                          ? "font-semibold text-ink underline decoration-1 underline-offset-[6px]"
-                          : "text-soft hover:text-ink"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {choice === OTHER && (
-                <input
-                  value={custom}
-                  onChange={(e) => setCustom(e.target.value)}
-                  maxLength={LOCATION_MAX}
-                  placeholder="예: 사무실 책상"
-                  aria-label="두는 곳 직접 입력"
-                  autoFocus
-                  className="mt-3 w-full border-0 border-b border-ink bg-transparent px-0 py-2 text-sm text-ink placeholder:text-faint focus:outline-none"
-                />
-              )}
+              <LocationPicker
+                choice={choice}
+                custom={custom}
+                onChoice={setChoice}
+                onCustom={setCustom}
+              />
 
               {locationChanged && (
                 <p className="mt-3 text-xs leading-relaxed text-soft">

@@ -4,15 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AccountMenu from "./AccountMenu";
 
+// 관찰이 중심이다. 진단·가이드는 메뉴에 두지 않고 관찰일지 안의 보조 링크로 들어간다.
 const NAV = [
-  { href: "/", label: "홈" },
-  { href: "/plants", label: "내 식물" },
-  { href: "/diagnose", label: "진단" },
-  { href: "/guide", label: "가이드" },
+  { href: "/", label: "오늘" },
+  { href: "/plants", label: "관찰일지" },
+  { href: "/plants/new", label: "식물 추가" },
 ];
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
+  // /plants/new 는 "식물 추가"만 켠다. "관찰일지"까지 같이 켜지지 않게 한다.
+  if (href === "/plants") {
+    return pathname === "/plants" || (pathname.startsWith("/plants/") && !pathname.startsWith("/plants/new"));
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

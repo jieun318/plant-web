@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import PageShell from "@/components/layout/PageShell";
-import PhotoUpload from "@/components/PhotoUpload";
 import PlantCard from "@/components/PlantCard";
 import Button from "@/components/ui/Button";
 import ContactSheet from "@/components/ui/ContactSheet";
@@ -76,7 +75,7 @@ export default function PlantsPage() {
 
   return (
     <PageShell>
-      <SectionTitle as="h1">내 식물</SectionTitle>
+      <SectionTitle as="h1">관찰일지</SectionTitle>
 
       <SectionHeader
         className="mt-6"
@@ -93,8 +92,8 @@ export default function PlantsPage() {
         aside={
           plants &&
           plants.length > 0 && (
-            <Button href="/" variant="link" size="sm">
-              새 식물 추가
+            <Button href="/plants/new" variant="link" size="sm">
+              식물 추가
             </Button>
           )
         }
@@ -107,8 +106,8 @@ export default function PlantsPage() {
       {plants && plants.length === 0 && (
         <EmptyState
           title="아직 등록한 식물이 없어요"
-          description="사진을 올리면 어떤 식물인지 알려드리고, 여기에 모아 물 줄 날짜를 챙겨드립니다."
-          action={<PhotoUpload variant="button" />}
+          description="사진 한 장으로 종을 알아보고, 기기를 연결하면 매일 관찰일지를 써드립니다."
+          action={<Button href="/plants/new">식물 추가</Button>}
         />
       )}
 

@@ -242,7 +242,7 @@ function PlantPicker() {
         <EmptyState
           title="진단할 식물이 없어요"
           description="식물을 먼저 등록하면 그 식물의 사진과 함께 진단해 드립니다."
-          action={<Button href="/">식물 등록하러 가기</Button>}
+          action={<Button href="/plants/new">식물 추가</Button>}
         />
       </div>
     );

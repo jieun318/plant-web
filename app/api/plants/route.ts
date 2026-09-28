@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { toPlantSpecies } from "@/lib/identification";
-import { cleanRange } from "@/lib/plant";
+import { LOCATION_MAX, NICKNAME_MAX, cleanRange, cleanText } from "@/lib/plant";
 import { getUserId, supabaseServer, uploadPhoto } from "@/lib/supabase-server";
 import type { Identification, IdentifyResult } from "@/types";
 
@@ -51,6 +51,9 @@ type CreateBody = {
   result?: IdentifyResult;
   /** 판별에 쓴 사진 data URL */
   photo?: string;
+  /** 등록하면서 같이 정하는 값 */
+  nickname?: string;
+  location?: string;
 };
 
 /** plants 에 넣을 한 줄. 두 경로가 같은 모양을 만들어야 한다. */
@@ -67,6 +70,8 @@ type PlantInsert = {
   photo_url: string | null;
   water_interval: number;
   identification_id: string | null;
+  nickname?: string | null;
+  location?: string | null;
   // 판별이 정한 관찰 기준. 없으면 관찰 상태를 판정하지 않는다
   temp_min: number | null;
   temp_max: number | null;
@@ -144,7 +149,8 @@ export async function POST(req: NextRequest) {
     const userId = await getUserId(req);
     if (!userId) return UNAUTHORIZED;
 
-    const { identificationId, result, photo }: CreateBody = await req.json();
+    const { identificationId, result, photo, nickname, location }: CreateBody =
+      await req.json();
 
     // 등록 후 뒤로 가서 다시 누르면 같은 식물이 두 개 생긴다. 이미 있으면 그걸 준다.
     if (identificationId) {
@@ -171,6 +177,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    row.nickname = cleanText(nickname, NICKNAME_MAX);
+    row.location = cleanText(location, LOCATION_MAX);
 
     const { data, error } = await supabaseServer
       .from("plants")
