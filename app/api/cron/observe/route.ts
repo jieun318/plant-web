@@ -27,7 +27,7 @@ function isCron(req: NextRequest): boolean {
 /**
  * POST /api/cron/observe — 하루 1회 관찰 만들기
  *
- * 배포: Vercel Cron 이 매일 오전 11시(한국 시간)에 부른다. 모든 식물을 돈다.
+ * 배포: Vercel Cron 이 매일 오전 11시(한국 시간)에 GET 으로 부른다. 모든 식물을 돈다.
  * 로컬: 관찰일지의 개발용 버튼이 { plantId } 로 부른다. 그 식물만 만든다.
  *
  * body: { plantId?, date?: "YYYY-MM-DD", days?: 1~14 }
@@ -90,4 +90,16 @@ export async function POST(req: NextRequest) {
     console.error("[observe]", e);
     return NextResponse.json({ error: "관찰을 만들지 못했습니다." }, { status: 500 });
   }
+}
+
+/**
+ * GET /api/cron/observe — Vercel Cron 은 GET 으로 부른다.
+ * body 가 없으므로 모든 식물의 오늘 관찰을 만든다. 크론 헤더가 없으면 막는다.
+ */
+export async function GET(req: NextRequest) {
+  if (!isCron(req)) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 401 });
+  }
+
+  return POST(req);
 }

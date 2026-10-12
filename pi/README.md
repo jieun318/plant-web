@@ -62,7 +62,7 @@ cd ~/plant-web/pi
 ```
 
 ```
-09-28 14:20:01 관찰 시작 · 서버 https://plant-web.vercel.app
+09-28 14:20:01 관찰 시작 · 서버 https://plant-web-alpha.vercel.app
 09-28 14:20:01 온습도 10분 간격 · 사진 [10, 12, 14, 16] 시
 09-28 14:20:04 온습도 23°C 52%
 ```
